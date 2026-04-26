@@ -1,0 +1,365 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>DB Editor - Jurnal Cuan</title>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600&display=swap');
+        body { font-family: 'Poppins', sans-serif; margin: 0; background: #f0f2f5; color: #333; }
+        .top-header {
+            background: linear-gradient(135deg, #71b7e6, #9b59b6);
+            color: #fff;
+            padding: 15px 30px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        .top-header h1 { font-size: 1.5rem; margin: 0; }
+        .top-header .user-info { display: flex; align-items: center; gap: 15px; }
+        .top-header #logout-btn { background: rgba(255,255,255,0.2); color: #fff; border: 1px solid #fff; padding: 8px 15px; border-radius: 5px; cursor: pointer; transition: background 0.3s; }
+        .top-header #logout-btn:hover { background: rgba(255,255,255,0.4); }
+
+        .container { max-width: 1400px; margin: 20px auto; padding: 20px; background: #fff; border-radius: 8px; box-shadow: 0 4px 12px rgba(0,0,0,0.1); }
+        .status { display: flex; align-items: center; gap: 8px; font-weight: 500; font-size: 0.9rem; background: #eee; padding: 5px 10px; border-radius: 15px; }
+        .status-indicator { width: 10px; height: 10px; border-radius: 50%; }
+        .status.connected .status-indicator { background: #28a745; }
+        .status.disconnected .status-indicator { background: #dc3545; }
+        .collapsible { background: #f8f9fa; border: 1px solid #ddd; border-radius: 5px; margin-bottom: 15px; }
+        .collapsible-header { background: #e9ecef; padding: 10px 15px; cursor: pointer; font-weight: 600; display: flex; justify-content: space-between; align-items: center; }
+        .collapsible-content { padding: 15px; display: block; border-top: 1px solid #ddd; }
+        #sql-query-input { width: 100%; height: 120px; font-family: monospace; font-size: 14px; margin-bottom: 10px; box-sizing: border-box; }
+        #data-controls { margin-bottom: 15px; display: flex; gap: 10px; align-items: center; }
+        table { width: 100%; border-collapse: collapse; }
+        th, td { padding: 10px; border: 1px solid #ddd; text-align: left; }
+        th { background: #f1f3f5; }
+        th.editable-header { cursor: pointer; }
+        th.editable-header:hover { background-color: #e9ebee; }
+        td { background-color: #fff; transition: background-color 0.3s; }
+        td[contenteditable="true"] { cursor: pointer; }
+        td[contenteditable="true"]:focus { background-color: #e3f2fd; outline: 2px solid #007bff; }
+        tbody tr:hover { background: #f8f9fa; }
+        button, input, select { font-family: 'Poppins', sans-serif; padding: 8px 12px; border-radius: 5px; border: 1px solid #ccc; font-size: 14px; }
+        button { background: #8e44ad; color: #fff; border: none; cursor: pointer; transition: background 0.3s; }
+        button:hover { background: #71b7e6; }
+        .btn-danger { background: #dc3545; }
+        .btn-danger:hover { background: #c82333; }
+        .modal { display: none; position: fixed; z-index: 1000; left: 0; top: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.4); }
+        .modal-content { background: #fff; margin: 10% auto; padding: 20px; border-radius: 8px; max-width: 500px; box-shadow: 0 5px 15px rgba(0,0,0,0.3); }
+        #add-row-form-body { display: flex; flex-direction: column; gap: 10px; max-height: 60vh; overflow-y: auto; padding-right: 10px;}
+        .toast { position: fixed; bottom: 20px; right: 20px; background: #333; color: #fff; padding: 15px; border-radius: 5px; z-index: 2000; opacity: 0; transition: opacity 0.5s, transform 0.5s; transform: translateY(20px); }
+        .toast.show { opacity: 1; transform: translateY(0); }
+        .toast.error { background-color: #dc3545; }
+        .toast.success { background-color: #28a745; }
+    </style>
+</head>
+<body>
+    <div class="top-header">
+        <h1>Jurnal Cuan - Editor</h1>
+        <div class="user-info">
+            <span id="username-display">Loading...</span>
+            <div id="status" class="status disconnected">
+                <div class="status-indicator"></div>
+            </div>
+            <button id="logout-btn">Logout</button>
+        </div>
+    </div>
+
+    <div class="container">
+        <div class="collapsible">
+            <div class="collapsible-header">SQL Editor</div>
+            <div class="collapsible-content">
+                <form id="sql-form">
+                    <textarea id="sql-query-input" placeholder="-- Masukkan query SQL di sini..."></textarea>
+                    <button type="submit">Jalankan</button>
+                </form>
+            </div>
+        </div>
+
+        <div id="data-controls">
+            <select id="table-select"><option>Loading...</option></select>
+            <button id="add-row-btn">+ Tambah Baris</button>
+        </div>
+
+        <div id="data-table-container"></div>
+    </div>
+
+    <div id="add-row-modal" class="modal"><div class="modal-content"><h3>Tambah Baris Baru</h3><form id="add-row-form"><div id="add-row-form-body"></div><br><button type="submit">Simpan</button><button type="button" id="cancel-add-row" class="btn-danger">Batal</button></form></div></div>
+    <div id="toast"></div>
+
+    <script>
+        // SCRIPT PROTEKSI HALAMAN DAN SESI
+        document.addEventListener('DOMContentLoaded', () => {
+            const userDisplay = document.getElementById('username-display');
+            const logoutBtn = document.getElementById('logout-btn');
+            const userToken = JSON.parse(localStorage.getItem('userToken'));
+
+            /*
+            // NONAKTIFKAN SEMENTARA: Logika ini akan mengalihkan jika pengguna tidak login.
+            if (!userToken) {
+                window.location.href = '/'; // Kembali ke login jika tidak ada token
+                return; // Hentikan eksekusi script selanjutnya
+            }
+            */
+            
+            // Tampilkan info pengguna jika ada, jika tidak tampilkan mode dev
+            if (userToken && userToken.username) {
+                userDisplay.textContent = `Selamat datang, ${userToken.username}!`;
+            } else {
+                userDisplay.textContent = `Mode Pengembangan`;
+            }
+
+            logoutBtn.addEventListener('click', () => {
+                localStorage.removeItem('userToken');
+                window.location.href = '/';
+            });
+
+            // --- SCRIPT EDITOR DATABASE LAMA (dimulai dari sini) ---
+            const API_BASE_URL = '/api';
+
+            const statusDiv = document.getElementById('status');
+            const tableSelect = document.getElementById('table-select');
+            const dataTableContainer = document.getElementById('data-table-container');
+            const sqlForm = document.getElementById('sql-form');
+            const sqlQueryInput = document.getElementById('sql-query-input');
+            const addRowBtn = document.getElementById('add-row-btn');
+            const addRowModal = document.getElementById('add-row-modal');
+            const addRowForm = document.getElementById('add-row-form');
+            const addRowFormBody = document.getElementById('add-row-form-body');
+            const cancelAddRowBtn = document.getElementById('cancel-add-row');
+            const toast = document.getElementById('toast');
+
+            let currentSchema = [];
+            let currentPrimaryKey = null;
+            let originalCellValue = '';
+
+            function showToast(message, isError = false) {
+                toast.textContent = message;
+                toast.className = `toast show ${isError ? 'error' : 'success'}`;
+                setTimeout(() => { toast.className = 'toast'; }, 3000);
+            }
+
+            async function loadTables(selectTable) {
+                try {
+                    const response = await fetch(`${API_BASE_URL}/tables`);
+                    if (!response.ok) throw new Error('Gagal fetch daftar tabel');
+                    const tables = await response.json();
+                    const currentTable = tableSelect.value;
+                    tableSelect.innerHTML = '<option value="">-- Pilih Tabel --</option>';
+                    tables.forEach(table => {
+                        const option = new Option(table, table);
+                        if (table === selectTable || table === currentTable) option.selected = true;
+                        tableSelect.add(option);
+                    });
+                } catch (error) { showToast(error.message, true); }
+            }
+
+            async function fetchAndRenderTable(tableName) {
+                if (!tableName) {
+                    dataTableContainer.innerHTML = '';
+                    return;
+                }
+                try {
+                    const schemaRes = await fetch(`${API_BASE_URL}/schema/${tableName}`);
+                     if (!schemaRes.ok) throw new Error('Gagal fetch skema tabel');
+                    const { schema, primaryKey } = await schemaRes.json();
+                    currentSchema = schema;
+                    currentPrimaryKey = primaryKey;
+                    
+                    if(!primaryKey) {
+                        showToast('Peringatan: Tabel ini tidak memiliki Primary Key. Fitur edit dan hapus tidak akan berfungsi.', true);
+                    }
+
+                    const dataRes = await fetch(`${API_BASE_URL}/execute-sql`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ query: `SELECT * FROM ${tableName}` }) });
+                    if (!dataRes.ok) throw new Error('Gagal fetch data tabel');
+                    const result = await dataRes.json();
+                    
+                    renderDataTable(result.data || [], tableName);
+                    
+                } catch (error) { showToast(`Gagal memuat data: ${error.message}`, true); }
+            }
+            
+            function renderDataTable(data, tableName) {
+                const headers = currentSchema.map(col => col.Field);
+                const table = document.createElement('table');
+                thead = table.createTHead();
+                const tbody = table.createTBody();
+                const headerRow = thead.insertRow();
+                
+                headers.forEach(h => {
+                    const th = document.createElement('th');
+                    th.textContent = h;
+                    th.className = 'editable-header';
+                    th.dataset.oldName = h;
+                    headerRow.appendChild(th);
+                });
+                if (currentPrimaryKey) headerRow.insertCell().outerHTML = '<th>Aksi</th>';
+
+                data.forEach(rowData => {
+                    const row = tbody.insertRow();
+                    const pkValue = rowData[currentPrimaryKey];
+                    headers.forEach(h => {
+                        const cell = row.insertCell();
+                        cell.textContent = rowData[h];
+                        if (currentPrimaryKey) {
+                           cell.dataset.pkValue = pkValue;
+                           cell.dataset.column = h;
+                           cell.contentEditable = true;
+                        }
+                    });
+                    if (currentPrimaryKey) {
+                        const actionCell = row.insertCell();
+                        const deleteBtn = document.createElement('button');
+                        deleteBtn.textContent = 'Hapus';
+                        deleteBtn.className = 'btn-danger delete-row-btn';
+                        deleteBtn.dataset.pkValue = pkValue;
+                        actionCell.appendChild(deleteBtn);
+                    }
+                });
+                dataTableContainer.innerHTML = '';
+                dataTableContainer.appendChild(table);
+            }
+
+            tableSelect.addEventListener('change', () => fetchAndRenderTable(tableSelect.value));
+
+            sqlForm.addEventListener('submit', async (e) => {
+                e.preventDefault();
+                const query = sqlQueryInput.value.trim();
+                if (!query) return;
+                try {
+                    const res = await fetch(`${API_BASE_URL}/execute-sql`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ query }) });
+                    const result = await res.json();
+                    if (!res.ok) throw new Error(result.message);
+                    
+                    const queryType = query.split(' ')[0].toUpperCase();
+                    if (['CREATE', 'DROP', 'ALTER'].includes(queryType)) await loadTables();
+                     showToast(result.message || 'Query berhasil dijalankan!', false);
+
+                    if (result.data) {
+                        currentSchema = result.data.length > 0 ? Object.keys(result.data[0]).map(k => ({ Field: k })) : [];
+                        currentPrimaryKey = null; 
+                        renderDataTable(result.data, 'Hasil Query');
+                    } else if (!['CREATE', 'DROP', 'ALTER'].includes(queryType)){
+                       fetchAndRenderTable(tableSelect.value);
+                    }
+                } catch (error) { showToast(error.message, true); }
+            });
+            
+            addRowBtn.addEventListener('click', () => {
+                if (!tableSelect.value) return showToast('Pilih tabel terlebih dahulu', true);
+                if (!currentPrimaryKey) return showToast('Tabel ini tidak memiliki Primary Key, tidak bisa menambah baris.', true);
+                addRowFormBody.innerHTML = '';
+                currentSchema.forEach(col => {
+                    if (col.Extra.includes('auto_increment')) return;
+                    const label = document.createElement('label');
+                    label.textContent = col.Field;
+                    const input = document.createElement('input');
+                    input.name = col.Field;
+                    input.placeholder = `${col.Type}`;
+                    addRowFormBody.appendChild(label);
+                    addRowFormBody.appendChild(input);
+                });
+                addRowModal.style.display = 'block';
+            });
+
+            cancelAddRowBtn.addEventListener('click', () => addRowModal.style.display = 'none');
+            window.addEventListener('click', (e) => { if(e.target == addRowModal) addRowModal.style.display = 'none'; });
+
+            addRowForm.addEventListener('submit', async (e) => {
+                e.preventDefault();
+                const rowData = Object.fromEntries(new FormData(e.target).entries());
+                try {
+                    const res = await fetch(`${API_BASE_URL}/add-row/${tableSelect.value}`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(rowData) });
+                    const result = await res.json();
+                    if (!res.ok) throw new Error(result.message);
+                    showToast('Baris berhasil ditambahkan!');
+                    addRowModal.style.display = 'none';
+                    fetchAndRenderTable(tableSelect.value);
+                } catch (error) { showToast(error.message, true); }
+            });
+
+            dataTableContainer.addEventListener('focusin', (e) => {
+                 if (e.target.isContentEditable) originalCellValue = e.target.textContent;
+            });
+
+            dataTableContainer.addEventListener('focusout', async (e) => {
+                if (e.target.isContentEditable && e.target.textContent !== originalCellValue) {
+                    const td = e.target;
+                    const payload = { tableName: tableSelect.value, pkColumn: currentPrimaryKey, pkValue: td.dataset.pkValue, columnName: td.dataset.column, newValue: td.textContent };
+                    try {
+                        const res = await fetch(`${API_BASE_URL}/update-cell`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload) });
+                        if (!res.ok) throw new Error((await res.json()).message);
+                        td.style.backgroundColor = '#d4edda';
+                        setTimeout(() => td.style.backgroundColor = '', 1500);
+                    } catch (error) { 
+                        showToast(error.message, true);
+                        td.textContent = originalCellValue;
+                    }
+                }
+            });
+            
+            dataTableContainer.addEventListener('keydown', e => {
+                if (e.target.isContentEditable && e.key === 'Escape') {
+                    e.target.textContent = originalCellValue;
+                    e.target.blur();
+                }
+            });
+
+            dataTableContainer.addEventListener('click', async (e) => {
+                const target = e.target;
+                if (target.classList.contains('delete-row-btn')) {
+                    if (!confirm('Apakah Anda yakin ingin menghapus baris ini?')) return;
+                    const payload = { tableName: tableSelect.value, pkColumn: currentPrimaryKey, pkValue: target.dataset.pkValue };
+                    try {
+                        const res = await fetch(`${API_BASE_URL}/delete-row`, { method: 'DELETE', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload) });
+                        if (!res.ok) throw new Error((await res.json()).message);
+                        showToast('Baris berhasil dihapus');
+                        target.closest('tr').remove();
+                    } catch (error) { showToast(error.message, true); }
+                } else if (target.tagName === 'TH' && target.classList.contains('editable-header')) {
+                    const th = target;
+                    const oldName = th.dataset.oldName;
+                    const input = document.createElement('input');
+                    input.value = oldName;
+                    th.textContent = '';
+                    th.appendChild(input);
+                    input.focus();
+
+                    const handleRename = async () => {
+                         const newName = input.value.trim();
+                         if (newName && newName !== oldName) {
+                            try {
+                                const res = await fetch(`${API_BASE_URL}/rename-column`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ tableName: tableSelect.value, oldName, newName }) });
+                                const result = await res.json();
+                                if (!res.ok) throw new Error(result.message);
+                                showToast(result.message);
+                                fetchAndRenderTable(tableSelect.value);
+                            } catch (err) {
+                                showToast(`Gagal mengubah nama: ${err.message}`, true);
+                                th.textContent = oldName;
+                            }
+                         } else {
+                            th.textContent = oldName;
+                         }
+                    }
+                    input.addEventListener('blur', handleRename, { once: true });
+                    input.addEventListener('keydown', e => { if(e.key === 'Enter') input.blur(); if(e.key === 'Escape') { input.removeEventListener('blur', handleRename); th.textContent = oldName; }});
+                }
+            });
+
+            (async function init() {
+                try {
+                    await fetch(`${API_BASE_URL}/status`);
+                    statusDiv.classList.add('connected');
+                    statusDiv.classList.remove('disconnected');
+                } catch (error) {
+                    statusDiv.classList.add('disconnected');
+                    statusDiv.classList.remove('connected');
+                }
+                loadTables();
+            })();
+        });
+    </script>
+</body>
+</html>wiw

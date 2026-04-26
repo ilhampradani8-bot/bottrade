@@ -1,0 +1,205 @@
+
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dashboard - Bot Trade</title>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap');
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body, html {
+            height: 100%;
+            width: 100%;
+            background-color: #f4f7f6;
+            font-family: 'Poppins', sans-serif;
+            color: #333;
+        }
+
+        .header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 0 24px;
+            height: 64px;
+            background-color: #ffffff;
+            border-bottom: 1px solid #e0e0e0;
+        }
+
+        .header .logo {
+            font-size: 1.5rem;
+            font-weight: 600;
+            color: #333;
+        }
+
+        .header-nav a, .user-menu a {
+            text-decoration: none;
+            color: #555;
+            font-weight: 500;
+            margin: 0 16px;
+            transition: color 0.2s;
+        }
+
+        .header-nav a:hover, .user-menu a:hover {
+            color: #9b59b6;
+        }
+
+        .user-menu {
+            display: flex;
+            align-items: center;
+        }
+        
+        .logout-btn {
+            cursor: pointer;
+        }
+
+        .main-container {
+            padding: 24px;
+        }
+
+        .card {
+            background: #fff;
+            border-radius: 12px;
+            padding: 24px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.05);
+            margin-bottom: 24px;
+        }
+
+        .card h2 {
+            font-size: 1.5rem;
+            font-weight: 600;
+            margin-bottom: 16px;
+        }
+        
+        .card h3 {
+            font-size: 1.1rem;
+            font-weight: 500;
+            margin-bottom: 16px;
+            color: #555;
+        }
+
+        .performance-chart {
+            height: 300px;
+            background: #f9f9f9;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: #aaa;
+            border-radius: 8px;
+            font-style: italic;
+        }
+
+        .api-key-form .input-group {
+            display: flex;
+            gap: 16px;
+            margin-bottom: 16px;
+        }
+
+        .api-key-form input[type="text"], .api-key-form input[type="password"] {
+            flex-grow: 1;
+            padding: 12px 15px;
+            border: 1px solid #ccc;
+            border-radius: 8px;
+            font-size: 1rem;
+            font-family: 'Poppins', sans-serif;
+        }
+        
+        .api-key-form button {
+            width: auto;
+            padding: 12px 24px;
+            border: none;
+            border-radius: 8px;
+            background: linear-gradient(135deg, #71b7e6, #9b59b6);
+            color: #fff;
+            font-size: 1rem;
+            font-weight: 500;
+            cursor: pointer;
+            transition: box-shadow 0.3s ease;
+        }
+
+        .api-key-form button:hover {
+            box-shadow: 0 4px 15px rgba(0,0,0,0.15);
+        }
+    </style>
+</head>
+<body>
+    <header class="header">
+        <div class="logo">Bot Trade</div>
+        <nav class="header-nav">
+            <a href="#">Dashboard</a>
+            <a href="#">Pengaturan</a>
+            <a href="#">Panduan</a>
+        </nav>
+        <div class="user-menu">
+            <span id="username-display" style="margin-right: 16px;"></span>
+            <a href="#" id="logout-btn" class="logout-btn">Logout</a>
+        </div>
+    </header>
+
+    <main class="main-container">
+        <div class="card">
+            <h2>Performa Robot (Data Dummy)</h2>
+            <div class="performance-chart">
+                [ Grafik Performa Akan Ditampilkan Di Sini ]
+            </div>
+        </div>
+
+        <div class="card">
+            <h2>Konfigurasi API Exchange</h2>
+            <p style="margin-bottom:20px; color:#555;">Masukkan API Key dan Secret dari exchange Anda untuk menghubungkan bot. Kunci Anda disimpan secara terenkripsi.</p>
+            
+            <form id="api-key-form" class="api-key-form">
+                <h3>Binance</h3>
+                <div class="input-group">
+                    <input type="text" id="binance-api-key" name="apiKey" placeholder="API Key Binance">
+                    <input type="password" id="binance-secret-key" name="secretKey" placeholder="Secret Key Binance">
+                </div>
+                <button type="submit">Simpan Kunci</button>
+            </form>
+            
+        </div>
+    </main>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            const userToken = JSON.parse(localStorage.getItem('userToken'));
+
+            // Jika tidak ada token, kembali ke halaman login
+            if (!userToken) {
+                window.location.href = '/frontend/login.html';
+                return;
+            }
+            
+            // Tampilkan nama pengguna
+            document.getElementById('username-display').textContent = `Selamat datang, ${userToken.username}!`;
+
+            // Fungsi Logout
+            const logoutButton = document.getElementById('logout-btn');
+            logoutButton.addEventListener('click', (e) => {
+                e.preventDefault();
+                localStorage.removeItem('userToken');
+                window.location.href = '/'; // Arahkan ke landing page setelah logout
+            });
+
+            // Menangani form API Key (contoh)
+            const apiKeyForm = document.getElementById('api-key-form');
+            apiKeyForm.addEventListener('submit', (e) => {
+                e.preventDefault();
+                const apiKey = document.getElementById('binance-api-key').value;
+                const secretKey = document.getElementById('binance-secret-key').value;
+
+                if(!apiKey || !secretKey) {
+                    alert('Mohon isi API Key dan Secret Key.');
+                    return;
+                }
+
+                // Di sini Anda akan mengirim data ke backend untuk disimpan
+                console.log('Menyimpan API Keys:', { apiKey, secretKey });
+                alert('API Key berhasil disimpan! (Hanya simulasi front-end)');
+                apiKeyForm.reset();
+            });
+
+        });
+    </script>
+</body>
+</html>
