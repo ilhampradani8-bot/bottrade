@@ -1,5 +1,5 @@
 # 🚀 TradingSafe (BotTrade)
-### High-Performance Autonomous Algorithmic Trading Infrastructure & Real-time Signal Engine
+### High-Performance Automated Crypto Trading Bot, Algorithmic Trading Platform, & Real-Time Signal Broadcaster
 
 [![Rust](https://img.shields.io/badge/Rust-000000?style=for-the-badge&logo=rust&logoColor=white)](https://www.rust-lang.org/)
 [![Next.js](https://img.shields.io/badge/Next.js-000000?style=for-the-badge&logo=nextdotjs&logoColor=white)](https://nextjs.org/)
@@ -10,7 +10,14 @@
 ---
 
 ## 🌌 Overview
-**TradingSafe** is a complete, enterprise-grade, autonomous algorithmic trading platform designed for the crypto markets. It bridges high-frequency quantitative analysis with a premium, sleek **Apple-inspired user interface**. Powered by a high-concurrency **Rust (Axum) backend**, the platform continuously tracks asset feeds, executes modular trading strategies, and broadcasts real-time bilingual predictions to WhatsApp and Telegram groups.
+**TradingSafe** is a complete, enterprise-grade, autonomous algorithmic crypto trading platform designed for high-frequency market execution. It bridges complex quantitative trading models with a premium, sleek **Apple-inspired user interface**. Powered by a highly concurrent **Rust (Axum) backend**, the system tracks real-time Binance feeds, runs modular trading strategies (DCA, Grid, and Hybrid), and broadcasts automated buy/sell signals to WhatsApp and Telegram communities.
+
+This project is created and maintained by **[Ilham Pradani S.H.](https://www.ilhampradani.me)**. Learn more about the developer and other projects at **[www.ilhampradani.me](https://www.ilhampradani.me)**.
+
+---
+
+## 🔎 SEO Keywords & Target Tags
+*`automated crypto trading bot`, `algorithmic trading platform`, `rust axum trading engine`, `next.js crypto dashboard`, `telegram crypto signal bot`, `whatsapp trading broadcaster`, `quantitative trading framework`, `dca bot`, `spot grid bot`, `real-time cryptocurrency tracker`, `binance automated trading`, `high-frequency trading engine`, `open-source crypto trading software`*
 
 ---
 
@@ -18,9 +25,9 @@
 
 ### 1. ⚙️ High-Performance Core Engine (`Engine24am` & `analysis-engine`)
 *   **Asynchronous Loop Workers**: Engineered in Rust using the **Tokio** runtime for ultra-low latency, running thousands of concurrent strategy workers.
-*   **Polars DataFrame Computations**: Lightning-fast technical indicator analysis and mathematical transformations.
+*   **Polars DataFrame Computations**: Lightning-fast technical indicator analysis (RSI, EMA, Bollinger Bands, MACD) and mathematical transformations.
 *   **Multi-Exchange Integration**: Seamless CCXT & OpenLimit integrations supporting 100+ global cryptocurrency exchanges.
-*   **Financial-Grade Accuracy**: Built using the `rust_decimal` crate, supporting up to 28 decimal places of mathematical precision to prevent rounding errors.
+*   **Financial-Grade Accuracy**: Built using the `rust_decimal` crate, supporting up to 28 decimal places of mathematical precision to prevent floating-point rounding errors.
 
 ### 2. 🎨 Premium Apple-Vibe UI/UX
 *   **Next.js 16 & Tailwind CSS v4**: Blazing fast rendering and modern styling.
@@ -62,6 +69,7 @@ bottrade/
 ├── logs/                  # Application logs and prediction ledger history
 ├── scratch/               # Database initialization SQL and test scripts
 ├── .gitignore             # Strict repository files exclusion rules
+├── .env.example           # Example configuration template file
 └── README.md              # Project documentation
 ```
 
@@ -76,15 +84,13 @@ bottrade/
 *   **Python 3.10+** (with Pandas & TA-Lib for Python-Rust bridges)
 
 ### Environment Configuration
-Create a `.env` file in the root directory:
-```env
-DATABASE_URL=postgres://username:password@localhost/bottrade
-JWT_SECRET=your_jwt_secret_here
-PORT=8080
-BINANCE_WS_URL=wss://stream.binance.com:9443/ws
-WHATSAPP_BRIDGE_URL=http://localhost:5002
-TELEGRAM_BOT_TOKEN=your_telegram_bot_token
-```
+To keep your secrets safe, **never commit your `.env` file to the repository**. Instead, use the provided `.env.example` file to set up your configuration.
+
+1. Copy the `.env.example` template:
+   ```bash
+   cp .env.example .env
+   ```
+2. Open `.env` and fill in your actual credentials (API keys, database password, JWT secret, etc.).
 
 ### Installation & Run Commands
 
@@ -140,8 +146,15 @@ nohup engine/target/release/prediction-v2 > logs/prediction-v2.log 2>&1 &
 
 ---
 
+## 👤 Developer & Maintainer
+*   **Author**: **Ilham Pradani S.H.**
+*   **Website**: [www.ilhampradani.me](https://www.ilhampradani.me)
+*   **Portfolio / Contact**: Visit the official website at [ilhampradani.me](https://www.ilhampradani.me) to connect, hire, or check out more open-source projects.
+
+---
+
 ## 📝 License
 This project is licensed under the MIT License. See the LICENSE file for details.
 
 ---
-*Developed with ❤️ by the TradingSafe Dev Team.*
+*Developed with ❤️ by Ilham Pradani S.H. & the TradingSafe Dev Team.*
