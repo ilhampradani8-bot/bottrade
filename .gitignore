@@ -1,59 +1,51 @@
-# --- Environment Variables ---
-.env
-
-# --- Node.js ---
+# Dependencies
 node_modules/
-npm-debug.log*
-yarn-debug.log*
-yarn-error.log*
-.pnpm-debug.log*
+.pnp
+.pnp.*
 
-# --- Python ---
-__pycache__/
-*.py[cod]
-*$py.class
-*.so
-.Python
-env/
-build/
-develop-eggs/
-dist/
-downloads/
-eggs/
-.eggs/
-lib/
-lib64/
-parts/
-sdist/
-var/
-wheels/
-*.egg-info/
-.installed.cfg
-*.egg
-venv/
-.venv/
+# Build outputs
+/target/
+/dist/
+/.next/
+/out/
+/build/
 
-# --- Database & Logs ---
+# Next.js
+.next/
+next-env.d.ts
+*.tsbuildinfo
+
+# Rust target directories
+**/target/
+
+# Environment and sensitive keys
+.env
+.env.local
+.env.development.local
+.env.test.local
+.env.production.local
+.env*.local
+.env*
+*.pem
+*.key
+
+# WhatsApp Session Auth Data
+whatsapp-service/auth_info/
+whatsapp-service/node_modules/
+
+# Logs and databases
+/logs/
 *.log
-adminer.log
-cf_adminer.log
-cf_api.log
-cf_app.log
-lhr_api.log
-lhr_app.log
-lt_api.log
-lt_app.log
-serveo_api.log
-serveo_app.log
-tailscaled.log
+/scratch/
+*.db
+*.sqlite
 
-# --- OS / IDE ---
+# IDEs and OS files
 .DS_Store
 .idea/
 .vscode/
-*.swp
-*.swo
-
-# --- Scratch Files ---
-scratch/
-test_*.py
+*.suo
+*.ntvs*
+*.njsproj
+*.sln
+*.sw?

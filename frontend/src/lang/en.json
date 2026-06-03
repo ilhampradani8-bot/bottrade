@@ -1,0 +1,81 @@
+{
+  "navbar": {
+    "login": "Login",
+    "register": "Register",
+    "logout": "Logout System",
+    "pro_member": "Pro Member",
+    "user_account": "User Account"
+  },
+  "sidebar": {
+    "overview": "Overview",
+    "strategy_settings": "Strategy Settings",
+    "api_settings": "API Settings",
+    "lab_simulation": "Lab Simulation",
+    "find_bot": "Find Bot",
+    "database": "Database SQL",
+    "acquire_data": "Acquire Data",
+    "hide_sidebar": "Hide Sidebar"
+  },
+  "strategy": {
+    "setup": "Setup",
+    "logic_control": "Logic & Parameter Control",
+    "fixed_nominal": "Fixed Nominal",
+    "safety_order": "Safety Order",
+    "safety_order_desc": "Safety order is the price if the asset price drops (bottom scoop), what is the nominal bottom scoop",
+    "time_interval": "Time Interval",
+    "target_tp": "Target Take Profit",
+    "stop_loss": "Stop Loss (Optional)",
+    "save_strategy": "SAVE STRATEGY",
+    "start_strategy": "START STRATEGY",
+    "reset_default": "Reset To Default",
+    "portfolio_assets": "Portfolio Assets",
+    "add_asset": "Add Asset",
+    "select_platform": "Select Platform (API Keys)",
+    "no_api_keys": "No API Keys connected"
+  },
+  "common": {
+    "days": "Days",
+    "hours": "Hours",
+    "minutes": "Minutes",
+    "success": "Success",
+    "error": "Error"
+  },
+  "grid": {
+    "price_range": "Price Range",
+    "lower_price": "Lower Price",
+    "upper_price": "Upper Price",
+    "grid_number": "Number of Grids",
+    "grid_mode": "Grid Mode",
+    "arithmetic": "Arithmetic",
+    "geometric": "Geometric",
+    "trigger_price": "Trigger Price (Optional)",
+    "advanced": "Advanced Settings",
+    "setup_warning": "Trending Market: Grid bots can lose money if the price continues to rise or fall (out of bounds) without returning to the original range.\\n\\nTransaction Fees: If the grid is too tight, make sure your profits are not consumed just to pay broker fees.",
+    "mode_desc": "Arithmetic: The distance between grid levels uses the same price difference (e.g., every Rp100 increase).\\n\\nGeometric: The distance between levels uses the same percentage (e.g., every 1% increase). This is more suitable for very wide price ranges.",
+    "min_capital": "Min Capital Suggestion",
+    "min_capital_desc": "Based on the number of grids, you need at least this capital so that each grid meets the minimum exchange transaction requirements."
+  },
+  "combo": {
+    "direction": "Bot Direction",
+    "long": "LONG (Buy)",
+    "short": "SHORT (Sell)",
+    "initial_margin": "Initial Margin",
+    "leverage": "Leverage",
+    "margin_mode": "Margin Mode",
+    "cross": "Cross",
+    "isolated": "Isolated",
+    "grid_levels": "Grid Levels (Profit)",
+    "dca_orders": "DCA Orders (Averaging)",
+    "grid_step": "Grid Step (%)",
+    "dca_step": "DCA Step (%)"
+  },
+  "trailing": {
+    "sl_type": "Stop Loss Type",
+    "sl_value": "Stop Loss Value",
+    "trailing_sl": "Trailing Stop Loss",
+    "trailing_on": "ON",
+    "trailing_off": "OFF",
+    "price": "Price",
+    "percentage": "Percentage"
+  }
+}

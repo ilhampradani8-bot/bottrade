@@ -1,9 +1,0 @@
-[
-  {"name": "Bitcoin (BTC)", "symbol": "BTC/IDR", "binance": "BTCUSDT"},
-  {"name": "Ethereum (ETH)", "symbol": "ETH/IDR", "binance": "ETHUSDT"},
-  {"name": "Solana (SOL)", "symbol": "SOL/IDR", "binance": "SOLUSDT"},
-  {"name": "Binance Coin (BNB)", "symbol": "BNB/IDR", "binance": "BNBUSDT"},
-  {"name": "Ripple (XRP)", "symbol": "XRP/IDR", "binance": "XRPUSDT"},
-  {"name": "Dogecoin (DOGE)", "symbol": "DOGE/IDR", "binance": "DOGEUSDT"},
-  {"name": "Cardano (ADA)", "symbol": "ADA/IDR", "binance": "ADAUSDT"}
-]

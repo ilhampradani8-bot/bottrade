@@ -1,0 +1,81 @@
+{
+  "navbar": {
+    "login": "Login",
+    "register": "Register",
+    "logout": "Logout System",
+    "pro_member": "Pro Member",
+    "user_account": "User Account"
+  },
+  "sidebar": {
+    "overview": "Overview",
+    "strategy_settings": "Strategy Settings",
+    "api_settings": "API Settings",
+    "lab_simulation": "Lab Simulation",
+    "find_bot": "Find Bot",
+    "database": "Database SQL",
+    "acquire_data": "Acquire Data",
+    "hide_sidebar": "Hide Sidebar"
+  },
+  "strategy": {
+    "setup": "Setup",
+    "logic_control": "Logic & Parameter Control",
+    "fixed_nominal": "Fixed Nominal",
+    "safety_order": "Safety Order",
+    "safety_order_desc": "Safety order adalah harga jika harga aset turun (serok bawah), berapa nominal serok bawah",
+    "time_interval": "Time Interval",
+    "target_tp": "Target Take Profit",
+    "stop_loss": "Stop Loss (Opsional)",
+    "save_strategy": "SAVE STRATEGY",
+    "start_strategy": "START STRATEGY",
+    "reset_default": "Reset To Default",
+    "portfolio_assets": "Portfolio Assets",
+    "add_asset": "Add Asset",
+    "select_platform": "Select Platform (API Keys)",
+    "no_api_keys": "No API Keys connected"
+  },
+  "common": {
+    "days": "Days",
+    "hours": "Hours",
+    "minutes": "Minutes",
+    "success": "Success",
+    "error": "Error"
+  },
+  "grid": {
+    "price_range": "Rentang Harga (Price Range)",
+    "lower_price": "Harga Batas Bawah",
+    "upper_price": "Harga Batas Atas",
+    "grid_number": "Jumlah Grid",
+    "grid_mode": "Mode Grid",
+    "arithmetic": "Arithmetic",
+    "geometric": "Geometric",
+    "trigger_price": "Trigger Price (Opsional)",
+    "advanced": "Pengaturan Lanjutan",
+    "setup_warning": "Pasar Trending: Bot grid bisa merugi jika harga naik terus atau turun terus (keluar jalur) tanpa kembali ke rentang semula.\\n\\nBiaya Transaksi: Jika grid terlalu rapat, pastikan keuntungan Anda tidak habis hanya untuk membayar fee broker.",
+    "mode_desc": "Arithmetic: Jarak antar level grid menggunakan selisih harga yang sama (misal: setiap kenaikan Rp100).\\n\\nGeometric: Jarak antar level menggunakan persentase yang sama (misal: setiap kenaikan 1%). Ini lebih cocok untuk rentang harga yang sangat lebar.",
+    "min_capital": "Saran Modal Minimum",
+    "min_capital_desc": "Berdasarkan jumlah grid, Anda membutuhkan minimal modal ini agar setiap grid memenuhi syarat minimum transaksi bursa."
+  },
+  "combo": {
+    "direction": "Arah Bot (Direction)",
+    "long": "LONG (Beli)",
+    "short": "SHORT (Jual)",
+    "initial_margin": "Modal Awal (Initial Margin)",
+    "leverage": "Leverage (Pengungkit)",
+    "margin_mode": "Mode Margin",
+    "cross": "Cross",
+    "isolated": "Isolated",
+    "grid_levels": "Grid Levels (Profit)",
+    "dca_orders": "DCA Orders (Averaging)",
+    "grid_step": "Grid Step (%)",
+    "dca_step": "DCA Step (%)"
+  },
+  "trailing": {
+    "sl_type": "Tipe Stop Loss",
+    "sl_value": "Nilai Stop Loss",
+    "trailing_sl": "Trailing Stop Loss",
+    "trailing_on": "ON",
+    "trailing_off": "OFF",
+    "price": "Harga",
+    "percentage": "Persentase"
+  }
+}
