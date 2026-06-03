@@ -50,3 +50,5 @@ whatsapp-service/node_modules/
 *.njsproj
 *.sln
 *.sw?
+.antigravityignore
+.antigrav*
