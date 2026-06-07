@@ -458,21 +458,26 @@ async fn main() -> Result<(), Box<dyn Error>> {
                     if action_taken {
                         println!("🔮 [V2 standalone] {} Event Triggered!", coin);
                         
-                        let id_group_id = "120363427987942506@g.us";
+                        let id_group_id = if pred.direction == "DOWN" {
+                            "120363409651722299@g.us"
+                        } else {
+                            "120363427987942506@g.us"
+                        };
                         let _ = notifications::whatsapp::send_to_group_with_reply(
-                            &message_id,
+                            &message_en, // Main group (Indo) now uses English
                             id_group_id,
-                            pred.whatsapp_msg_id_id.as_deref()
-                        ).await;
-                        
-                        let _ = notifications::whatsapp::send_to_group_with_reply(
-                            &message_en,
-                            "120363409228885921@g.us",
                             pred.whatsapp_msg_id_en.as_deref()
                         ).await;
 
+                        let target_tg_chat = if pred.direction == "DOWN" {
+                            std::env::var("TELEGRAM_CHAT_ID_DOWN").unwrap_or_else(|_| "-5215838199".to_string())
+                        } else {
+                            std::env::var("TELEGRAM_CHAT_ID").unwrap_or_else(|_| "-1003973511282".to_string())
+                        };
+
                         let _ = notifications::telegram::send_with_reply(
                             &message_id,
+                            &target_tg_chat,
                             pred.telegram_message_id
                         ).await;
 
@@ -570,19 +575,24 @@ async fn main() -> Result<(), Box<dyn Error>> {
 
                         println!("🔮 [V2 standalone] New Prediction Triggered for {}!", coin);
                         
-                        let mut whatsapp_msg_id_id = None;
-                        let id_group_id = "120363427987942506@g.us";
-                        if let Ok(msg_id) = notifications::whatsapp::send_to_group_with_reply(&message_id, id_group_id, None).await {
-                            whatsapp_msg_id_id = Some(msg_id);
-                        }
-                        
+                        let id_group_id = if direction == "DOWN" {
+                            "120363409651722299@g.us"
+                        } else {
+                            "120363427987942506@g.us"
+                        };
                         let mut whatsapp_msg_id_en = None;
-                        if let Ok(msg_id) = notifications::whatsapp::send_to_group_with_reply(&message_en, "120363409228885921@g.us", None).await {
+                        if let Ok(msg_id) = notifications::whatsapp::send_to_group_with_reply(&message_en, id_group_id, None).await {
                             whatsapp_msg_id_en = Some(msg_id);
                         }
 
+                        let target_tg_chat = if direction == "DOWN" {
+                            std::env::var("TELEGRAM_CHAT_ID_DOWN").unwrap_or_else(|_| "-5215838199".to_string())
+                        } else {
+                            std::env::var("TELEGRAM_CHAT_ID").unwrap_or_else(|_| "-1003973511282".to_string())
+                        };
+
                         let mut telegram_message_id = None;
-                        if let Ok(msg_id) = notifications::telegram::send_with_reply(&message_id, None).await {
+                        if let Ok(msg_id) = notifications::telegram::send_with_reply(&message_id, &target_tg_chat, None).await {
                             telegram_message_id = Some(msg_id);
                         }
 
@@ -605,7 +615,7 @@ async fn main() -> Result<(), Box<dyn Error>> {
                             created_at: now,
                             expires_at,
                             telegram_message_id,
-                            whatsapp_msg_id_id,
+                            whatsapp_msg_id_id: None,
                             whatsapp_msg_id_en,
                         };
 

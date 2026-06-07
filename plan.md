@@ -12,6 +12,7 @@
 
 * **Status**: *Pengembangan Aktif & Pemolesan Antarmuka (UI) - **Minimalist Edge-to-Edge, Global Light/Dark Theme & Apple-Vibe Sleek Layout Selesai 100%***
   * **TradingSafe Engine**: **Analysis Engine (Rust)** 24/7 + **WhatsApp Bridge (Node.js)** berjalan kokoh di background VPS.
+  * **Automated Marketing Engine**: **Marketing Bot (Rust)** terintegrasi Groq API (Llama 3.3) berjalan otonom di background VPS.
   * **Backend App**: **Engine24am** (Loop worker dinamis berbasis Tokio, mesin analisis data Polars, sinkronisasi DB setiap 10 detik).
   * **Frontend**: **Next.js 16 (Turbopack) + Tailwind CSS v4** (Antarmuka modern premium bergaya Apple dengan sistem tema dual-mode).
   * **Host API Utama**: `http://139.59.122.230:8080/api` (Backend Rust).
@@ -61,9 +62,23 @@ Sebelum memodifikasi UI, harap ketahui implementasi yang telah selesai berikut i
   * *Tampilan Lengkap (Expanded):* Saat tombol `>` diklik, panel bergeser turun secara dinamis memunculkan baris kartu kontak (Find us, Call us, Mail us), kolom link navigasi cepat (Useful Links), deskripsi ringkas beserta ikon sosial media SVG, dan kolom langganan email.
   * *Unifikasi Tipografi:* Semua teks diatur seragam menggunakan micro-typography premium **`text-[11px]`** dengan spasi renggang (`tracking-widest`) untuk mewujudkan nuansa Apple premium.
 
+### C. Standalone V2 Prediction Test Engine (`prediction-v2`)
+* **Status**: **Aktif Berjalan Secara Penuh di Grup Utama & Telegram** (Menggantikan V1 untuk seluruh pengiriman notifikasi publik).
+* **Fitur Canggih Terbaru**:
+  * **Target Routing V2 Baru**:
+    * **WhatsApp**: Notifikasi sinyal dengan arah naik (UP) dikirimkan ke grup utama WhatsApp **`TradingSafe - Up Predictions` (`120363427987942506@g.us`)**, sedangkan arah turun (DOWN) dikirimkan ke grup khusus WhatsApp **`TradingSafe - Down Predictions` (`120363409651722299@g.us`)**. Pengantar sinyal dan pesan sambutan di kedua grup ini sepenuhnya disajikan dalam **Bahasa Inggris**. Grup Bahasa Inggris lama (`120363409228885921@g.us`) telah dinonaktifkan (dihentikan).
+    * **Telegram**: Sinyal dengan arah naik (UP) dikirim ke group utama (`TELEGRAM_CHAT_ID="-1003973511282"`), sedangkan sinyal dengan arah turun (DOWN) dialihkan ke group khusus (`TELEGRAM_CHAT_ID_DOWN="-5215838199"`).
+  * **V1 Disimpan (Dormant/Ditinjau)**: Kode dan logic teknikal dari `analysis-engine` (V1) tetap aktif berjalan di background, namun seluruh pengiriman ke WhatsApp grup dan Telegram dinonaktifkan (dikomentari) agar tidak terjadi duplikasi atau spam.
+  * **Anti-Spam Cooldown**: Menghindari pengiriman pesan berlebih dengan memaksakan jeda tenang (*cooldown*) selama **15 menit** setelah suatu siklus prediksi koin selesai (TARGET_HIT, STOP_LOSS_HIT, atau TIMEOUT) sebelum prediksi baru pada koin tersebut bisa dipicu kembali.
+  * **Format Desimal Dinamis (Coin-Specific Decimals)**: Koin bernilai rendah seperti **XRP** menggunakan format **4 desimal** (contoh: Entry: $1.2435, TP: $1.2497) agar target profit (TP) dan batas keluar tidak tampak identik akibat pembulatan desimal. Koin besar lainnya tetap menggunakan format 2 desimal standar.
+  * **Pesan Profesional**: Tajuk pesan diubah menjadi lebih rapi dan formal: `[TRADINGSAFE V2]` (menghapus kata "PAMER PREDIKSI").
+  * **Threaded Quoted Reply (WhatsApp & Telegram)**: Robot menyimpan ID pesan awal saat memicu prediksi baru di WhatsApp & Telegram. Ketika status prediksi berubah menjadi **Target Tercapai**, **Batal**, atau **Batas Waktu Habis**, robot secara otomatis membalas (*reply/quote*) pesan prediksi awal tersebut di grup WhatsApp masing-masing serta utas chat Telegram agar riwayat teratur dan transparan.
+  * **Log Riwayat Prediksi Persisten**: Setiap peristiwa siklus hidup prediksi didokumentasikan otomatis ke dalam berkas log JSON terstruktur di `/root/bottrade/logs/prediction_history.json`.
+  * **Dukungan Prediksi Bearish**: Mendukung pendeteksian penuh baik untuk sinyal naik (**BULLISH CALL**) maupun turun (**BEARISH CALL**) secara real-time pada timeframe 15 menit menggunakan EMA (50) & RSI (14).
+
 ---
 
-## 3. 🛠 Detail Teknologi & Perintah Pengembangan
+## 5. 🛠 Detail Teknologi & Perintah Pengembangan
 
 * **Lokasi Frontend**: `/root/bottrade/frontend`
 * **Lokasi Backend**: `/root/bottrade/backend`
@@ -78,51 +93,21 @@ Sebelum memodifikasi UI, harap ketahui implementasi yang telah selesai berikut i
 
 ---
 
-## 4. 🚀 TradingSafe Auto-Analysis & WhatsApp Microservice (24/7 Production-Ready)
+## 6. 📢 TradingSafe Automated Marketing & Copywriting Engine
 
-Mesin analisis pasar kripto otomatis yang terintegrasi dengan jembatan WhatsApp Baileys dan Telegram.
+Sistem otomatisasi copywriting iklan berbasis AI menggunakan Groq API (`llama-3.1-8b-instant`) dan Rust Daemon.
 
-### A. Komponen & Alur Data
-1. **Rust Engine (`analysis-engine`)**:
-   * Menghubungkan secara real-time ke Binance WebSocket untuk melacak 5 koin top (BTC, ETH, SOL, BNB, XRP) di 4 timeframe (5m, 15m, 1h, 1d).
-   * Melakukan kalkulasi teknikal RSI (14) & EMA (50) di setiap penutupan candle.
-   * **Bilingual Twin-Broadcast**: Secara dinamis menghasilkan laporan versi Indonesia dan Inggris saat terjadi breakout/heartbeat berkala.
-2. **WhatsApp Service (`index.js` - Node.js)**:
-   * Berjalan pada port `5002` dengan persistensi sesi otentikasi di folder `auth_info`.
-   * Berperan sebagai jembatan HTTP REST API (`/send`) yang dipanggil Rust engine untuk mengirim pesan ke ID grup tujuan.
-
-### B. Konfigurasi Khusus & Target Routing
-* **Welcome Bot Investor (`120363408324880520@g.us`)**: Menyambut anggota baru dengan pesan profesional Bahasa Indonesia dan mengarahkan mereka untuk membaca proposal lengkap di Deskripsi Grup.
-* **Group Analisa Bahasa Indonesia (`120363427987942506@g.us` & Telegram)**: Menerima seluruh laporan analisis berkala dan breakout versi Bahasa Indonesia secara real-time.
-* **Group Analisa Bahasa Inggris (`120363409228885921@g.us`)**: Menerima seluruh laporan analisis berkala dan breakout versi Bahasa Inggris secara real-time.
-
-### C. Standalone V2 Prediction Test Engine (`prediction-v2`)
-* **Status**: **Aktif Berjalan Secara Penuh di Grup Utama & Telegram** (Menggantikan V1 untuk seluruh pengiriman notifikasi publik).
-* **Fitur Canggih Terbaru**:
-  * **Target Routing V2 Baru**: Seluruh notifikasi prediksi V2 Bahasa Indonesia sekarang dialihkan langsung ke grup utama WhatsApp **`120363427987942506@g.us`** serta dikirimkan ke **Telegram** (default Chat ID).
-  * **V1 Disimpan (Dormant/Ditinjau)**: Kode dan logic teknikal dari `analysis-engine` (V1) tetap aktif berjalan di background, namun seluruh pengiriman ke WhatsApp grup dan Telegram dinonaktifkan (dikomentari) agar tidak terjadi duplikasi atau spam.
-  * **Anti-Spam Cooldown**: Menghindari pengiriman pesan berlebih dengan memaksakan jeda tenang (*cooldown*) selama **15 menit** setelah suatu siklus prediksi koin selesai (TARGET_HIT, STOP_LOSS_HIT, atau TIMEOUT) sebelum prediksi baru pada koin tersebut bisa dipicu kembali.
-  * **Format Desimal Dinamis (Coin-Specific Decimals)**: Koin bernilai rendah seperti **XRP** menggunakan format **4 desimal** (contoh: Entry: $1.2435, TP: $1.2497) agar target profit (TP) dan batas keluar tidak tampak identik akibat pembulatan desimal. Koin besar lainnya tetap menggunakan format 2 desimal standar.
-  * **Pesan Profesional**: Tajuk pesan diubah menjadi lebih rapi dan formal: `[TRADINGSAFE V2]` (menghapus kata "PAMER PREDIKSI").
-  * **Threaded Quoted Reply (WhatsApp & Telegram)**: Robot menyimpan ID pesan awal saat memicu prediksi baru di WhatsApp & Telegram. Ketika status prediksi berubah menjadi **Target Tercapai**, **Batal**, atau **Batas Waktu Habis**, robot secara otomatis membalas (*reply/quote*) pesan prediksi awal tersebut di grup WhatsApp masing-masing serta utas chat Telegram agar riwayat teratur dan transparan.
-  * **Log Riwayat Prediksi Persisten**: Setiap peristiwa siklus hidup prediksi didokumentasikan otomatis ke dalam berkas log JSON terstruktur di `/root/bottrade/logs/prediction_history.json`.
-  * **Dukungan Prediksi Bearish**: Mendukung pendeteksian penuh baik untuk sinyal naik (**BULLISH CALL**) maupun turun (**BEARISH CALL**) secara real-time pada timeframe 15 menit menggunakan EMA (50) & RSI (14).
-
----
-
-## 5. 🧠 Cetak Biru (Blueprint) untuk Sesi AI Baru (Petunjuk Langsung)
-
-Saat pengguna memberikan perintah baru di sesi berikutnya:
-1. **Patuhi Batasan Tinggi (Navbar Height)**: Navbar utama bertinggi mutlak `56px` (`h-14`). Semua layout baru yang membutuhkan tinggi penuh wajib mengikuti rumus tinggi dinamis `h-[calc(100vh-56px)]`.
-2. **Pertahankan Layout Edge-to-Edge**: Jangan sekali-kali menambahkan margin atau padding luar tebal (`p-6` atau `max-w-7xl mx-auto`) di tingkat tata letak utama `AdminLayout.tsx`. Layout harus tetap menempel penuh hingga ke batas tepi window browser.
-3. **Pelihara Estetika Neumorphic & High-Density**: Jika menambahkan kontrol tombol baru, pastikan menggunakan kelas bayangan ganda taktil (`shadow-[3px_3px_6px...]` atau kelas `.neumorphic-btn` di `globals.css`) dan tinggi ramping (`rounded-[4px]` dan `py-1.5`) agar konsisten dengan dashboard kokpit trading 2026.
-4. **Optimalkan Transisi Sidebar**: State `isSidebarOpen` dikontrol oleh pengguna melalui tombol toggle Navbar. Gunakan transisi properti lebar (`w-56` ke `w-0`) untuk menyembunyikan sidebar di desktop secara elegan.
-5. **Manajemen Service Latar Belakang (VPS)**:
-   * **Restart WhatsApp Bridge**: `pkill -f "node index.js"` dan jalankan kembali `nohup node index.js > /root/bottrade/logs/whatsapp-bridge.log 2>&1 &` di folder `whatsapp-service`.
-   * **Restart Rust Engine Utama**: `pkill -f "target/release/analysis-engine"` dan jalankan kembali `nohup target/release/analysis-engine > /root/bottrade/logs/analysis-engine.log 2>&1 &` di folder `engine` (atau jalankan script `bash build.sh`).
-   * **Restart Rust V2 Prediction Standalone**: `pkill -f "target/release/prediction-v2"` dan jalankan kembali `nohup target/release/prediction-v2 > /root/bottrade/logs/prediction-v2.log 2>&1 &` di folder `engine` (atau jalankan script `bash build_v2.sh`).
-6. **Pemantauan Real-time Log**:
-   * WhatsApp Bridge: `tail -f /root/bottrade/logs/whatsapp-bridge.log`
-   * Analysis Engine Utama: `tail -f /root/bottrade/logs/analysis-engine.log`
-   * V2 Prediction Engine: `tail -f /root/bottrade/logs/prediction-v2.log`
-   * Prediction JSON History: `cat /root/bottrade/logs/prediction_history.json`
+### A. Fitur Utama & Cara Kerja
+1. **Otonom 1-Hour Scheduling**: Konten pemasaran diposting secara konsisten setiap 1 jam sekali. Jadwal dihitung secara otomatis dan disimpan secara persisten di `/root/bottrade/logs/marketing_state.json`. Apabila jadwal berikutnya tersimpan lebih dari 1 jam di masa depan, sistem otomatis memotongnya ke maksimal 1 jam dari sekarang.
+2. **Event-Driven Target Hit**: Bereaksi instan saat target profit koin tercapai (`TARGET_HIT` event terdeteksi di log history) untuk menyusun caption performa/keberhasilan sinyal secara real-time.
+3. **Pilar Konten Dinamis (Proposal-Based)**: 
+   * AI menyusun konten bernilai orisinal dan bervariasi dengan tema: visi asisten trading kalkulatif 24 jam tanpa emosi, keamanan dana 100% di dompet pengguna (*non-custodial*), tanpa biaya bagi hasil (*no profit fee*), desain antarmuka minimalis modern Apple-vibe, transparansi sinyal tanpa manipulasi, dan program promo gratis akses rilis beta.
+4. **Log Anti-Repetisi (Anti-Repeat)**: 
+   * Bot menyimpan 5 topik postingan terakhir di berkas state. Log topik ini diumpankan kembali ke prompt Groq API untuk memastikan tidak ada pengulangan pilar konten berturut-turut.
+5. **Kepatuhan Format & Batasan Sosial**:
+   * **Bilingual ke English-Only**: Seluruh postingan pemasaran (WhatsApp, Telegram, dan Buffer) sekarang disajikan sepenuhnya dalam **Bahasa Inggris** (tidak ada lagi postingan ganda Indonesia/Inggris). Laporan Info Pasar Kripto juga dikonversi ke format Bahasa Inggris.
+   * **Real-time Push (Immediate Publishing)**: Menggunakan mode `"shareNow"` (bukan `"addToQueue"`) di API GraphQL Buffer. Ini mempublikasikan konten secara instan dari VPS ke Threads dan X (Twitter), sehingga melompati batasan kuota antrean 10 postingan di akun gratis Buffer.
+   * **Safety Character Limit (Twitter/X)**: Melindungi pengiriman dari kegagalan akibat batas 280 karakter Twitter. Di dalam modul `notifications.rs`, postingan yang ditargetkan untuk Twitter/X yang melebihi 280 karakter akan otomatis dipotong secara aman pada karakter ke-277 dan disematkan akhiran `...`.
+   * **Bebas Jargon Teknis**: Teks bebas dari istilah komputer (seperti *Rust, latency, database, non-custodial, API keys, dll*), digantikan dengan keunggulan bisnis yang mudah dipahami orang awam.
+   * **Multi-Platform Distribution**: Mengirimkan hasil tulisan secara paralel ke WhatsApp, Telegram, dan Buffer (X & Threads).
+   * **Robust Telegram Deliverability**: Jika pengiriman dengan format Markdown gagal, sistem secara otomatis melakukan retry pengiriman pesan dalam format teks polos (plain text) untuk menjamin postingan selalu terkirim tanpa gagal.

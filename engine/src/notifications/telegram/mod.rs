@@ -63,14 +63,13 @@ pub async fn send_to_group(message: &str, target_group_id: &str) -> Result<(), B
     Ok(())
 }
 
-pub async fn send_with_reply(message: &str, reply_to_message_id: Option<i64>) -> Result<i64, Box<dyn Error>> {
+pub async fn send_with_reply(message: &str, target_chat_id: &str, reply_to_message_id: Option<i64>) -> Result<i64, Box<dyn Error>> {
     let token = env::var("TELEGRAM_BOT_TOKEN")?;
-    let chat_id = env::var("TELEGRAM_CHAT_ID")?;
     let url = format!("https://api.telegram.org/bot{}/sendMessage", token);
 
     let client = reqwest::Client::new();
     let mut payload = json!({
-        "chat_id": chat_id,
+        "chat_id": target_chat_id,
         "text": message,
         "parse_mode": "Markdown"
     });
@@ -87,13 +86,40 @@ pub async fn send_with_reply(message: &str, reply_to_message_id: Option<i64>) ->
     if response.status().is_success() {
         let res_json: serde_json::Value = response.json().await?;
         if let Some(msg_id) = res_json.get("result").and_then(|r| r.get("message_id")).and_then(|m| m.as_i64()) {
-            println!("🚀 [Telegram] Message sent successfully with ID: {}", msg_id);
+            println!("🚀 [Telegram] Message sent successfully to {} with ID: {}", target_chat_id, msg_id);
             return Ok(msg_id);
         }
         Err("Missing message_id in response".into())
     } else {
         let err_text = response.text().await?;
-        eprintln!("❌ [Telegram] Failed to send message. Response: {}", err_text);
+        eprintln!("❌ [Telegram] Failed to send message to {}. Response: {}", target_chat_id, err_text);
+        
+        // Retry as plain text fallback
+        let retry_payload = if let Some(reply_id) = reply_to_message_id {
+            json!({
+                "chat_id": target_chat_id,
+                "text": message,
+                "reply_to_message_id": reply_id
+            })
+        } else {
+            json!({
+                "chat_id": target_chat_id,
+                "text": message
+            })
+        };
+        let retry_response = client.post(&url)
+            .json(&retry_payload)
+            .send()
+            .await?;
+
+        if retry_response.status().is_success() {
+            let res_json: serde_json::Value = retry_response.json().await?;
+            if let Some(msg_id) = res_json.get("result").and_then(|r| r.get("message_id")).and_then(|m| m.as_i64()) {
+                println!("🚀 [Telegram] Message sent successfully to {} as plain text fallback with ID: {}", target_chat_id, msg_id);
+                return Ok(msg_id);
+            }
+        }
+        
         Err(format!("Telegram API error: {}", err_text).into())
     }
 }

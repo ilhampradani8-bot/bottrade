@@ -82,21 +82,21 @@ async function connectToWhatsApp() {
                 if (id === "120363408324880520@g.us") {
                     // Investor Group (Indonesian)
                     welcomeMsg = `Selamat bergabung @${jidNum} di *Investor Group*! 🙏💼\n\nMohon sempatkan untuk membaca *Deskripsi Grup* kami, karena di sana terdapat link proposal lengkap mengenai proyek TradingSafe. Selamat berdiskusi! 📈🚀`;
-                } else if (id === "120363409228885921@g.us") {
-                    // English Signal/Analysis Group
-                    welcomeMsg = `Hello @${jidNum}! Welcome to the *TradingSafe* group! 📈🚀\n\nHere you will receive the most accurate 24-hour market analysis updates automatically. Happy trading and let's achieve consistent profits together! 🤝💼`;
+                } else if (id === "120363409651722299@g.us") {
+                    // DOWN Predictions Group (English)
+                    welcomeMsg = `Hello @${jidNum}! Welcome to the *TradingSafe - Down Predictions* group! 📉🚀\n\nHere you will receive the most accurate 24-hour DOWN market prediction signals automatically. Happy trading! 🤝💼`;
                 } else if (GROUP_ID && id === GROUP_ID) {
-                    // Main Indonesian analysis group
-                    welcomeMsg = `Halo @${jidNum}! Selamat bergabung di grup *TradingSafe*! 📈🚀\n\nDi sini Anda akan menerima update analisa market 24 jam terakurat secara otomatis. Selamat berdiskusi dan raih profit konsisten bersama kami! 🤝💼`;
+                    // Main UP Predictions Group (now English)
+                    welcomeMsg = `Hello @${jidNum}! Welcome to the *TradingSafe - Up Predictions* group! 📈🚀\n\nHere you will receive the most accurate 24-hour UP market prediction signals automatically. Happy trading! 🤝💼`;
                 }
-
+ 
                 // Only send if the group has a configured welcome message
                 if (welcomeMsg) {
                     try {
                         // Random delay of 2 to 5 seconds to look natural (Anti-Ban!)
                         const delay = Math.floor(Math.random() * 3000) + 2000;
                         await new Promise(resolve => setTimeout(resolve, delay));
-
+ 
                         await sock.sendMessage(id, {
                             text: welcomeMsg,
                             mentions: [participant]
@@ -170,6 +170,48 @@ app.post('/send', async (req, res) => {
         return res.json({ success: true, message_id: sentMsg.key.id });
     } catch (err) {
         console.error(`❌ Failed to send message to WhatsApp group ${targetGroupId}:`, err);
+        return res.status(500).json({ error: err.toString() });
+    }
+});
+
+app.get('/group-invites', async (req, res) => {
+    if (!sock) {
+        return res.status(503).json({ error: 'WhatsApp service is not initialized yet' });
+    }
+    const groups = {
+        "Indonesian_Main_UP": "120363427987942506@g.us",
+        "Indonesian_DOWN": "120363409651722299@g.us",
+        "English_Main": "120363409228885921@g.us",
+        "Investor": "120363408324880520@g.us",
+        "Marketing": "120363426456935344@g.us"
+    };
+
+    const results = {};
+    for (const [name, jid] of Object.entries(groups)) {
+        try {
+            const code = await sock.groupInviteCode(jid);
+            results[name] = { jid, link: `https://chat.whatsapp.com/${code}` };
+        } catch (err) {
+            results[name] = { jid, error: err.toString() };
+        }
+    }
+    return res.json(results);
+});
+
+app.post('/group-rename', async (req, res) => {
+    const { group_id, name } = req.body;
+    if (!group_id || !name) {
+        return res.status(400).json({ error: 'group_id and name are required' });
+    }
+    if (!sock) {
+        return res.status(503).json({ error: 'WhatsApp service is not initialized yet' });
+    }
+    try {
+        await sock.groupUpdateSubject(group_id, name);
+        console.log(`✏️ Group ${group_id} renamed to "${name}"`);
+        return res.json({ success: true, message: `Group renamed to "${name}" successfully` });
+    } catch (err) {
+        console.error(`❌ Failed to rename group ${group_id}:`, err);
         return res.status(500).json({ error: err.toString() });
     }
 });
