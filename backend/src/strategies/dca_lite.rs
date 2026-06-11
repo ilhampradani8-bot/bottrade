@@ -1,9 +1,10 @@
 use crate::get_data::Kline;
 use crate::strategies::{Trade, BacktestResult};
+use crate::strategies::indicators::IndicatorFilter;
 use rust_decimal::Decimal;
 use rust_decimal_macros::dec;
 
-pub fn run_dca_backtest(klines: &[Kline], initial_capital: Decimal) -> BacktestResult {
+pub fn run_dca_backtest(klines: &[Kline], initial_capital: Decimal, filter: &IndicatorFilter) -> BacktestResult {
     let mut balance = initial_capital;
     let mut position_size = dec!(0);
     let mut average_price = dec!(0);
@@ -31,9 +32,9 @@ pub fn run_dca_backtest(klines: &[Kline], initial_capital: Decimal) -> BacktestR
 
         if day_locked { continue; }
 
-        // Buy Logic
+        // Buy Logic — with indicator confirmation
         if position_size == dec!(0) || k.low < average_price * buy_trigger_drop {
-            if balance >= buy_amount {
+            if balance >= buy_amount && filter.allows_buy(i) {
                 let buy_price = k.low;
                 let units = buy_amount / buy_price;
                 
@@ -51,9 +52,12 @@ pub fn run_dca_backtest(klines: &[Kline], initial_capital: Decimal) -> BacktestR
             }
         }
         
-        // Sell Logic (Take Profit)
-        if position_size > dec!(0) && k.high > average_price * take_profit_target {
-            let sell_price = k.high;
+        // Sell Logic (Take Profit) — also sell if indicator says sell
+        let should_tp = position_size > dec!(0) && k.high > average_price * take_profit_target;
+        let indicator_sell = position_size > dec!(0) && filter.suggests_sell(i);
+        
+        if should_tp || indicator_sell {
+            let sell_price = if should_tp { k.high } else { k.close };
             let revenue = position_size * sell_price;
             let pnl = revenue - (average_price * position_size);
             
@@ -61,7 +65,7 @@ pub fn run_dca_backtest(klines: &[Kline], initial_capital: Decimal) -> BacktestR
             total_pnl += pnl;
             
             trades.push(Trade {
-                side: "SELL".into(),
+                side: if indicator_sell && !should_tp { "SELL (Indicator)".into() } else { "SELL".into() },
                 price: sell_price,
                 time: k.open_time,
                 pnl: Some(pnl),
@@ -77,7 +81,7 @@ pub fn run_dca_backtest(klines: &[Kline], initial_capital: Decimal) -> BacktestR
     }
 
     let win_trades = trades.iter().filter(|t| t.pnl.unwrap_or(dec!(0)) > dec!(0)).count();
-    let total_sell_trades = trades.iter().filter(|t| t.side == "SELL").count();
+    let total_sell_trades = trades.iter().filter(|t| t.side.contains("SELL")).count();
     
     let win_rate = if total_sell_trades > 0 {
         Decimal::from(win_trades) / Decimal::from(total_sell_trades) * dec!(100)
@@ -87,6 +91,10 @@ pub fn run_dca_backtest(klines: &[Kline], initial_capital: Decimal) -> BacktestR
 
     let mut indicator_data = std::collections::HashMap::new();
     indicator_data.insert("avg_price".to_string(), avg_price_history);
+    // Merge indicator computed data
+    for (key, val) in &filter.computed_data {
+        indicator_data.insert(key.clone(), val.clone());
+    }
 
     BacktestResult {
         total_trades: trades.len(),

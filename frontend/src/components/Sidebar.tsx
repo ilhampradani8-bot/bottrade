@@ -50,8 +50,8 @@ export default function Sidebar({ isOpen, setIsOpen, activeView, setActiveView }
     <aside className={`${
       isOpen 
         ? 'translate-x-0 w-56 opacity-100 border-r border-white/10' 
-        : '-translate-x-full lg:translate-x-0 w-0 opacity-0 border-r-0 pointer-events-none lg:pointer-events-auto'
-    } fixed lg:relative top-14 lg:top-0 left-0 h-[calc(100vh-56px)] bg-[#06070b]/95 backdrop-blur-xl lg:bg-transparent flex flex-col z-40 transition-all duration-300 ease-in-out overflow-hidden`}>
+        : '-translate-x-full lg:translate-x-0 lg:w-0 opacity-0 border-r-0 pointer-events-none'
+    } fixed top-14 left-0 h-[calc(100vh-56px)] bg-[#06070b]/95 backdrop-blur-xl flex flex-col z-40 transition-all duration-300 ease-in-out overflow-hidden`}>
       
       {/* Mobile-only Close Top Button */}
       <div className="p-4 flex justify-between items-center lg:hidden border-b border-white/5">

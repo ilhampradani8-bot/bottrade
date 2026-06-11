@@ -6,6 +6,7 @@ pub mod trailing_lite;
 pub mod bollinger_pro;
 pub mod ema_pro;
 pub mod rsi_pro;
+pub mod indicators;
 
 use crate::get_data::Kline;
 use rust_decimal::Decimal;

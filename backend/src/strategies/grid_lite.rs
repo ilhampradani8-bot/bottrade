@@ -1,5 +1,6 @@
 use crate::get_data::Kline;
 use crate::strategies::{Trade, BacktestResult};
+use crate::strategies::indicators::IndicatorFilter;
 use rust_decimal::Decimal;
 use rust_decimal_macros::dec;
 use serde::Deserialize;
@@ -13,7 +14,7 @@ pub struct GridSettings {
     pub daily_drawdown_limit: Option<Decimal>,
 }
 
-pub fn run_grid_backtest(klines: &[Kline], settings: GridSettings) -> BacktestResult {
+pub fn run_grid_backtest(klines: &[Kline], settings: GridSettings, filter: &IndicatorFilter) -> BacktestResult {
     let mut balance = settings.modal;
     let mut trades = Vec::new();
     let mut total_pnl = dec!(0);
@@ -32,7 +33,7 @@ pub fn run_grid_backtest(klines: &[Kline], settings: GridSettings) -> BacktestRe
     let mut last_day = -1;
     let mut day_locked = false;
 
-    for k in klines {
+    for (idx, k) in klines.iter().enumerate() {
         // Daily Drawdown Logic
         let current_day = k.open_time / 86400000;
         if current_day != last_day {
@@ -81,7 +82,7 @@ pub fn run_grid_backtest(klines: &[Kline], settings: GridSettings) -> BacktestRe
             let level_price = settings.lower_price + (grid_size * Decimal::from(i));
             
             // Buy if price drops to level and we don't have a buy there
-            if active_buys[i].is_none() && k.low <= level_price && balance >= amount_per_grid {
+            if active_buys[i].is_none() && k.low <= level_price && balance >= amount_per_grid && filter.allows_buy(idx) {
                 active_buys[i] = Some(level_price);
                 balance -= amount_per_grid;
                 
@@ -125,6 +126,9 @@ pub fn run_grid_backtest(klines: &[Kline], settings: GridSettings) -> BacktestRe
     let mut indicator_data = std::collections::HashMap::new();
     indicator_data.insert("lower_bound".to_string(), vec![Some(settings.lower_price); klines.len()]);
     indicator_data.insert("upper_bound".to_string(), vec![Some(settings.upper_price); klines.len()]);
+    for (key, val) in &filter.computed_data {
+        indicator_data.insert(key.clone(), val.clone());
+    }
 
     BacktestResult {
         total_trades: trades.len(),

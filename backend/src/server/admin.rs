@@ -24,7 +24,7 @@ pub async fn admin_login(
     Json(payload): Json<AdminLoginRequest>,
 ) -> (StatusCode, Json<AuthResponse>) {
     let user = sqlx::query!(
-        "SELECT id, password_hash, role FROM users WHERE username = $1",
+        "SELECT id, password_hash, role FROM users_by_usermanagement WHERE username = $1",
         payload.username
     )
     .fetch_optional(&state.pool)
@@ -113,7 +113,7 @@ pub async fn get_all_users(
 ) -> (StatusCode, Json<Vec<AdminUser>>) {
     let users = sqlx::query_as!(
         AdminUser,
-        "SELECT id as \"id!\", username as \"username!\", email as \"email!\", role, created_at as \"created_at!\" FROM users ORDER BY created_at DESC"
+        "SELECT id as \"id!\", username as \"username!\", email as \"email!\", role, created_at as \"created_at!\" FROM users_by_usermanagement ORDER BY created_at DESC"
     )
     .fetch_all(&state.pool)
     .await
@@ -128,8 +128,8 @@ pub async fn get_all_bots(
     let bots = sqlx::query_as!(
         AdminBot,
         "SELECT s.id as \"id!\", s.user_id as \"user_id!\", s.name as \"name!\", s.bot_type as \"bot_type!\", s.pair as \"pair!\", s.status, u.username as \"username!\" 
-         FROM strategies s 
-         JOIN users u ON s.user_id = u.id 
+         FROM strategies_by_strategysettings s 
+         JOIN users_by_usermanagement u ON s.user_id = u.id 
          ORDER BY s.id DESC"
     )
     .fetch_all(&state.pool)
@@ -151,25 +151,25 @@ pub struct AdminOverview {
 pub async fn get_admin_overview(
     State(state): State<AppState>,
 ) -> (StatusCode, Json<AdminOverview>) {
-    let users_count = sqlx::query!("SELECT COUNT(*) FROM users")
+    let users_count = sqlx::query!("SELECT COUNT(*) FROM users_by_usermanagement")
         .fetch_one(&state.pool)
         .await
         .map(|r| r.count.unwrap_or(0))
         .unwrap_or(0);
 
-    let bots_count = sqlx::query!("SELECT COUNT(*) FROM strategies WHERE status = 'Running'")
+    let bots_count = sqlx::query!("SELECT COUNT(*) FROM strategies_by_strategysettings WHERE status = 'Running'")
         .fetch_one(&state.pool)
         .await
         .map(|r| r.count.unwrap_or(0))
         .unwrap_or(0);
 
-    let trades_count = sqlx::query!("SELECT COUNT(*) FROM trades")
+    let trades_count = sqlx::query!("SELECT COUNT(*) FROM trades_by_jurnalriwayat")
         .fetch_one(&state.pool)
         .await
         .map(|r| r.count.unwrap_or(0))
         .unwrap_or(0);
 
-    let profit = sqlx::query!("SELECT SUM(pnl) as total_pnl FROM trades")
+    let profit = sqlx::query!("SELECT SUM(pnl) as total_pnl FROM trades_by_jurnalriwayat")
         .fetch_one(&state.pool)
         .await
         .map(|r| r.total_pnl.unwrap_or(rust_decimal::Decimal::ZERO))
@@ -208,7 +208,7 @@ pub async fn get_market_summary(
 ) -> (StatusCode, Json<Vec<MarketSummary>>) {
     let summary = sqlx::query!(
         "SELECT symbol, interval, MIN(open_time) as start_t, MAX(open_time) as end_t, COUNT(*) as cnt 
-         FROM market_data 
+         FROM market_data_by_backtest 
          GROUP BY symbol, interval"
     )
     .fetch_all(&state.pool)
@@ -233,8 +233,8 @@ pub async fn get_all_api_keys(
     let keys = sqlx::query_as!(
         AdminApiKey,
         "SELECT a.id, u.username as \"username!\", a.platform_name, a.label, a.created_at as \"created_at!\" 
-         FROM api_keys a 
-         JOIN users u ON a.user_id = u.id 
+         FROM api_keys_by_credential a 
+         JOIN users_by_usermanagement u ON a.user_id = u.id 
          ORDER BY a.created_at DESC"
     )
     .fetch_all(&state.pool)
@@ -265,7 +265,7 @@ pub async fn get_admin_reports(
     let trades = sqlx::query_as!(
         crate::server::api::UserTrade,
         "SELECT id as \"id!\", pair as \"pair!\", strategy_type as \"strategy_type!\", side as \"side!\", price as \"price!\", amount as \"amount!\", pnl as \"pnl?\", created_at as \"created_at!\", status as \"status!\" 
-         FROM trades ORDER BY created_at DESC LIMIT 20"
+         FROM trades_by_jurnalriwayat ORDER BY created_at DESC LIMIT 20"
     )
     .fetch_all(&state.pool)
     .await
@@ -273,7 +273,7 @@ pub async fn get_admin_reports(
 
     let stats = sqlx::query!(
         "SELECT DATE(created_at) as day, SUM(pnl) as total_pnl, COUNT(*) as cnt 
-         FROM trades 
+         FROM trades_by_jurnalriwayat 
          GROUP BY DATE(created_at) 
          ORDER BY day DESC LIMIT 7"
     )
@@ -300,7 +300,7 @@ pub async fn update_user_status(
     Json(payload): Json<UpdateBotStatus>, // Reusing status payload
 ) -> (StatusCode, Json<serde_json::Value>) {
     let result = sqlx::query!(
-        "UPDATE users SET status = $1 WHERE id = $2",
+        "UPDATE users_by_usermanagement SET status = $1 WHERE id = $2",
         payload.status,
         user_id
     )
@@ -319,7 +319,7 @@ pub async fn update_bot_status(
     Json(payload): Json<UpdateBotStatus>,
 ) -> (StatusCode, Json<serde_json::Value>) {
     let result = sqlx::query!(
-        "UPDATE strategies SET status = $1 WHERE id = $2",
+        "UPDATE strategies_by_strategysettings SET status = $1 WHERE id = $2",
         payload.status,
         bot_id
     )
@@ -338,7 +338,7 @@ pub async fn update_bot_config(
     Json(payload): Json<UpdateBotConfig>,
 ) -> (StatusCode, Json<serde_json::Value>) {
     let result = sqlx::query!(
-        "UPDATE strategies SET name = $1, settings = $2 WHERE id = $3",
+        "UPDATE strategies_by_strategysettings SET name = $1, settings = $2 WHERE id = $3",
         payload.name,
         payload.settings,
         bot_id

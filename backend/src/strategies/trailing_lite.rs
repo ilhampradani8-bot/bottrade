@@ -1,5 +1,6 @@
 use crate::get_data::Kline;
 use crate::strategies::{Trade, BacktestResult};
+use crate::strategies::indicators::IndicatorFilter;
 use rust_decimal::Decimal;
 use rust_decimal_macros::dec;
 use serde::{Deserialize, Serialize};
@@ -39,7 +40,7 @@ fn calculate_rsi(data: &[Decimal], period: usize) -> Vec<Option<Decimal>> {
     rsi
 }
 
-pub fn run_trailing_backtest(klines: &[Kline], settings: TrailingSettings) -> BacktestResult {
+pub fn run_trailing_backtest(klines: &[Kline], settings: TrailingSettings, filter: &IndicatorFilter) -> BacktestResult {
     let closes: Vec<Decimal> = klines.iter().map(|k| k.close).collect();
     let rsi_values = calculate_rsi(&closes, settings.rsi_period);
 
@@ -90,7 +91,7 @@ pub fn run_trailing_backtest(klines: &[Kline], settings: TrailingSettings) -> Ba
 
         // Entry: RSI Oversold
         if position_size == dec!(0) && rsi < settings.rsi_buy_level {
-            if balance >= settings.buy_amount {
+            if balance >= settings.buy_amount && filter.allows_buy(i) {
                 let buy_price = k.close;
                 position_size = settings.buy_amount / buy_price;
                 balance -= settings.buy_amount;
@@ -144,6 +145,9 @@ pub fn run_trailing_backtest(klines: &[Kline], settings: TrailingSettings) -> Ba
 
     let mut indicator_data = std::collections::HashMap::new();
     indicator_data.insert("rsi".to_string(), rsi_values);
+    for (key, val) in &filter.computed_data {
+        indicator_data.insert(key.clone(), val.clone());
+    }
 
     BacktestResult {
         total_trades: trades.len(),

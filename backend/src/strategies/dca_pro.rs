@@ -1,5 +1,6 @@
 use crate::get_data::Kline;
 use crate::strategies::{Trade, BacktestResult};
+use crate::strategies::indicators::IndicatorFilter;
 use rust_decimal::Decimal;
 use rust_decimal_macros::dec;
 use serde::{Deserialize, Serialize};
@@ -29,7 +30,7 @@ pub struct DcaProSettings {
     pub daily_drawdown_limit: Option<Decimal>,
 }
 
-pub fn run_dca_pro_backtest(klines: &[Kline], settings: DcaProSettings, initial_capital: Decimal) -> BacktestResult {
+pub fn run_dca_pro_backtest(klines: &[Kline], settings: DcaProSettings, initial_capital: Decimal, filter: &IndicatorFilter) -> BacktestResult {
     let mut balance = initial_capital;
     let mut position_size = dec!(0);
     let mut average_price = dec!(0);
@@ -82,9 +83,9 @@ pub fn run_dca_pro_backtest(klines: &[Kline], settings: DcaProSettings, initial_
             }
         }
 
-        // 1. ENTRY LOGIC (Base Order)
+        // 1. ENTRY LOGIC (Base Order) — with indicator confirmation
         if position_size == dec!(0) {
-            if balance >= settings.base_order_size {
+            if balance >= settings.base_order_size && filter.allows_buy(i) {
                 let buy_price = k.close;
                 let units = (settings.base_order_size * Decimal::from(settings.leverage)) / buy_price;
                 
@@ -134,23 +135,41 @@ pub fn run_dca_pro_backtest(klines: &[Kline], settings: DcaProSettings, initial_
             }
         }
         
-        // 3. EXIT LOGIC (Take Profit & Trailing)
+        // 3. EXIT LOGIC (Take Profit & Trailing) — indicator sell signal also triggers exit
         if position_size > dec!(0) {
             let tp_price = average_price * (dec!(1) + settings.take_profit);
+            let indicator_sell = filter.suggests_sell(i);
             
-            if !is_trailing && k.high >= tp_price {
+            if !is_trailing && (k.high >= tp_price || indicator_sell) {
                 if let Some(_trailing) = settings.trailing_stop {
-                    is_trailing = true;
-                    highest_price = k.high;
+                    if !indicator_sell {
+                        is_trailing = true;
+                        highest_price = k.high;
+                    } else {
+                        // Indicator says sell — exit immediately
+                        let sell_price = k.close;
+                        let pnl = (sell_price - average_price) * position_size;
+                        balance += (position_size * average_price / Decimal::from(settings.leverage)) + pnl;
+                        total_pnl += pnl;
+                        trades.push(Trade {
+                            side: "SELL (Indicator)".into(),
+                            price: sell_price,
+                            time: k.open_time,
+                            pnl: Some(pnl),
+                        });
+                        position_size = dec!(0);
+                        average_price = dec!(0);
+                        current_safety_orders = 0;
+                    }
                 } else {
-                    // Normal TP
-                    let sell_price = tp_price;
+                    // Normal TP or indicator sell
+                    let sell_price = if indicator_sell { k.close } else { tp_price };
                     let pnl = (sell_price - average_price) * position_size;
                     balance += (position_size * average_price / Decimal::from(settings.leverage)) + pnl;
                     total_pnl += pnl;
                     
                     trades.push(Trade {
-                        side: "SELL (TP)".into(),
+                        side: if indicator_sell { "SELL (Indicator)".into() } else { "SELL (TP)".into() },
                         price: sell_price,
                         time: k.open_time,
                         pnl: Some(pnl),
@@ -168,14 +187,14 @@ pub fn run_dca_pro_backtest(klines: &[Kline], settings: DcaProSettings, initial_
                 let trailing_percent = settings.trailing_stop.unwrap_or(dec!(0.01));
                 let stop_price = highest_price * (dec!(1) - trailing_percent);
                 
-                if k.low <= stop_price {
-                    let sell_price = stop_price;
+                if k.low <= stop_price || indicator_sell {
+                    let sell_price = if indicator_sell { k.close } else { stop_price };
                     let pnl = (sell_price - average_price) * position_size;
                     balance += (position_size * average_price / Decimal::from(settings.leverage)) + pnl;
                     total_pnl += pnl;
                     
                     trades.push(Trade {
-                        side: "SELL (Trailing TP)".into(),
+                        side: if indicator_sell { "SELL (Indicator)".into() } else { "SELL (Trailing TP)".into() },
                         price: sell_price,
                         time: k.open_time,
                         pnl: Some(pnl),
@@ -205,6 +224,9 @@ pub fn run_dca_pro_backtest(klines: &[Kline], settings: DcaProSettings, initial_
 
     let mut indicator_data = std::collections::HashMap::new();
     indicator_data.insert("avg_price".to_string(), avg_price_history);
+    for (key, val) in &filter.computed_data {
+        indicator_data.insert(key.clone(), val.clone());
+    }
 
     BacktestResult {
         total_trades: trades.len(),

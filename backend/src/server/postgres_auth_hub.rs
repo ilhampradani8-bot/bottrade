@@ -54,7 +54,7 @@ pub async fn register(
     };
 
     let result = sqlx::query!(
-        "INSERT INTO users (username, email, password_hash) VALUES ($1, $2, $3) RETURNING id",
+        "INSERT INTO users_by_usermanagement (username, email, password_hash) VALUES ($1, $2, $3) RETURNING id",
         payload.username,
         payload.email,
         hashed
@@ -81,7 +81,7 @@ pub async fn login(
     Json(payload): Json<LoginRequest>,
 ) -> (StatusCode, Json<AuthResponse>) {
     let user = sqlx::query!(
-        "SELECT id, password_hash FROM users WHERE email = $1",
+        "SELECT id, password_hash FROM users_by_usermanagement WHERE email = $1",
         payload.email
     )
     .fetch_optional(&state.pool)
@@ -150,7 +150,7 @@ pub async fn get_me(
 
         if let Ok(data) = token_data {
             let user = sqlx::query!(
-                "SELECT username, email, created_at FROM users WHERE id = $1",
+                "SELECT username, email, created_at FROM users_by_usermanagement WHERE id = $1",
                 data.claims.sub
             )
             .fetch_optional(&state.pool)
@@ -168,3 +168,149 @@ pub async fn get_me(
 
     (StatusCode::UNAUTHORIZED, Json(None))
 }
+
+#[derive(Deserialize, TS)]
+#[ts(export, export_to = "../../frontend/src/types/GoogleLoginRequest.ts")]
+pub struct GoogleLoginRequest {
+    pub credential: String,
+}
+
+#[derive(Deserialize)]
+pub struct GoogleTokenInfo {
+    pub aud: String,
+    pub email: String,
+    pub email_verified: Option<serde_json::Value>,
+    pub name: Option<String>,
+}
+
+pub async fn google_login(
+    State(state): State<AppState>,
+    Json(payload): Json<GoogleLoginRequest>,
+) -> (StatusCode, Json<AuthResponse>) {
+    let client = reqwest::Client::new();
+    let url = format!("https://oauth2.googleapis.com/tokeninfo?id_token={}", payload.credential);
+    
+    let response = match client.get(&url).send().await {
+        Ok(res) => res,
+        Err(e) => return (StatusCode::BAD_REQUEST, Json(AuthResponse {
+            status: "error".into(),
+            message: format!("Failed to contact Google: {}", e),
+            token: None,
+        })),
+    };
+
+    if !response.status().is_success() {
+        return (StatusCode::BAD_REQUEST, Json(AuthResponse {
+            status: "error".into(),
+            message: "Invalid Google credential token".into(),
+            token: None,
+        }));
+    }
+
+    let token_info: GoogleTokenInfo = match response.json().await {
+        Ok(info) => info,
+        Err(_) => return (StatusCode::INTERNAL_SERVER_ERROR, Json(AuthResponse {
+            status: "error".into(),
+            message: "Failed to parse Google response".into(),
+            token: None,
+        })),
+    };
+
+    // Verify Audience/Client ID
+    let allowed_client_id = "812430784237-70vet0sepo0f0eti0cs62nnjd4s89ia8.apps.googleusercontent.com";
+    if token_info.aud != allowed_client_id {
+        return (StatusCode::UNAUTHORIZED, Json(AuthResponse {
+            status: "error".into(),
+            message: "Client ID mismatch".into(),
+            token: None,
+        }));
+    }
+
+    // Lookup user in DB by email
+    let user = sqlx::query!(
+        "SELECT id FROM users_by_usermanagement WHERE email = $1",
+        token_info.email
+    )
+    .fetch_optional(&state.pool)
+    .await;
+
+    let user_id = match user {
+        Ok(Some(row)) => row.id,
+        Ok(None) => {
+            // User does not exist, let's create a new one!
+            let base_username = token_info.email.split('@').next().unwrap_or("user").to_string();
+            // Ensure username is unique by checking if it already exists
+            let mut username = base_username.clone();
+            let mut count = 0;
+            loop {
+                let check = sqlx::query!(
+                    "SELECT id FROM users_by_usermanagement WHERE username = $1",
+                    username
+                )
+                .fetch_optional(&state.pool)
+                .await;
+                
+                if let Ok(None) = check {
+                    break;
+                }
+                count += 1;
+                username = format!("{}_{}", base_username, count);
+            }
+
+            // Create random password hash for security
+            let random_pw = format!("oauth_google_{}", chrono::Utc::now().timestamp_nanos_opt().unwrap_or(0));
+            let hashed_pw = match hash(random_pw, DEFAULT_COST) {
+                Ok(h) => h,
+                Err(_) => return (StatusCode::INTERNAL_SERVER_ERROR, Json(AuthResponse {
+                    status: "error".into(),
+                    message: "Failed to generate security credential".into(),
+                    token: None,
+                })),
+            };
+
+            let insert_res = sqlx::query!(
+                "INSERT INTO users_by_usermanagement (username, email, password_hash) VALUES ($1, $2, $3) RETURNING id",
+                username,
+                token_info.email,
+                hashed_pw
+            )
+            .fetch_one(&state.pool)
+            .await;
+
+            match insert_res {
+                Ok(row) => row.id,
+                Err(e) => return (StatusCode::INTERNAL_SERVER_ERROR, Json(AuthResponse {
+                    status: "error".into(),
+                    message: format!("Failed to create user: {}", e),
+                    token: None,
+                })),
+            }
+        },
+        Err(e) => return (StatusCode::INTERNAL_SERVER_ERROR, Json(AuthResponse {
+            status: "error".into(),
+            message: format!("Database lookup failed: {}", e),
+            token: None,
+        })),
+    };
+
+    // Generate JWT token
+    let secret = env::var("JWT_SECRET").unwrap_or_else(|_| "secret".into());
+    let expiration = Utc::now()
+        .checked_add_signed(Duration::hours(24))
+        .expect("valid timestamp")
+        .timestamp();
+
+    let claims = Claims {
+        sub: user_id,
+        exp: expiration as usize,
+    };
+
+    let token = encode(&Header::default(), &claims, &EncodingKey::from_secret(secret.as_ref())).unwrap();
+
+    (StatusCode::OK, Json(AuthResponse {
+        status: "success".into(),
+        message: "Login successful with Google".into(),
+        token: Some(token),
+    }))
+}
+

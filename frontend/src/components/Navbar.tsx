@@ -15,7 +15,7 @@ import {
 import AuthModal from './AuthModal';
 import { useLanguage } from '@/lang/LanguageContext';
 
-export default function Navbar({ toggleSidebar, isSidebarOpen, setActiveView }: any) {
+export default function Navbar({ toggleSidebar, isSidebarOpen, setActiveView, activeView }: any) {
   const { lang, changeLanguage } = useLanguage();
   const [authModal, setAuthModal] = useState({ isOpen: false, mode: 'login' });
   const [user, setUser] = useState<any>(null);
@@ -31,6 +31,13 @@ export default function Navbar({ toggleSidebar, isSidebarOpen, setActiveView }: 
       document.body.classList.add('light-theme');
     } else {
       document.body.classList.remove('light-theme');
+    }
+
+    // Auto open auth modal if redirected from landing page
+    const trigger = localStorage.getItem('open_auth_modal');
+    if (trigger === 'login' || trigger === 'register') {
+      setAuthModal({ isOpen: true, mode: trigger });
+      localStorage.removeItem('open_auth_modal');
     }
   }, []);
 
@@ -75,8 +82,22 @@ export default function Navbar({ toggleSidebar, isSidebarOpen, setActiveView }: 
     window.location.reload();
   };
 
+  const getViewTitle = (view: string) => {
+    switch (view) {
+      case 'overview': return 'Overview';
+      case 'api-key': return 'API Settings';
+      case 'tester': return 'Simulation Lab';
+      case 'cari-bot': return 'Cari Asisten';
+      case 'get-data': return 'Data Acquisition';
+      case 'strategi-pengaturan': return 'Bot Configurations';
+      case 'jurnal': return 'History Journal';
+      case 'chat': return 'Concierge Support';
+      default: return '';
+    }
+  };
+
   return (
-    <nav className="h-14 px-4 sm:px-6 flex items-center justify-between sticky top-0 bg-black/40 backdrop-blur-xl border-b border-white/5 z-[999] w-full">
+    <nav className="h-14 px-4 sm:px-6 flex items-center justify-between fixed top-0 left-0 right-0 bg-black/40 backdrop-blur-xl border-b border-white/5 z-[999] w-full">
       <div className="flex items-center gap-4">
         {/* Interactive Hamburger button: turns into X icon when sidebar is open */}
         <button onClick={toggleSidebar} className="p-2 text-[#86868b] hover:text-white transition-all duration-300 transform active:scale-95">
@@ -84,13 +105,20 @@ export default function Navbar({ toggleSidebar, isSidebarOpen, setActiveView }: 
         </button>
         
         <div 
-          onClick={() => setActiveView && setActiveView('landing')}
+          onClick={() => window.location.href = '/home'}
           className="flex items-center gap-2 cursor-pointer group"
         >
           <div className="w-7 h-7 bg-white text-black rounded-[6px] flex items-center justify-center shadow-lg shadow-white/5 group-hover:scale-105 transition-all">
             <TrendingUp size={16} strokeWidth={2.5} />
           </div>
-          <span className="text-xs font-black text-white tracking-[0.2em] uppercase hidden sm:block group-hover:text-[#F1BF0A] transition-all">tradingsafe</span>
+          <div className="flex items-center gap-2">
+            <span className="text-xs font-black text-white tracking-[0.2em] uppercase hidden sm:block group-hover:text-[#F1BF0A] transition-all">tradingsafe</span>
+            {activeView && (
+              <span className="text-[10px] font-black text-[#86868b] tracking-[0.1em] uppercase hidden md:inline-flex items-center before:content-['/'] before:mx-2 before:opacity-30 before:text-white">
+                {getViewTitle(activeView)}
+              </span>
+            )}
+          </div>
         </div>
       </div>
 

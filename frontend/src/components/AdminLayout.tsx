@@ -12,9 +12,9 @@ import DataAcquisition from "@/components/features/DataAcquisition";
 import StrategySettings from "@/components/features/StrategySettings";
 import JurnalRiwayat from "@/components/features/JurnalRiwayat";
 import ChatSupport from "@/components/features/ChatSupport";
-import LandingPage from "@/components/features/LandingPage";
 import { LayoutDashboard, Search, Key, Menu, MessageSquare, Settings } from 'lucide-react';
 import { useLanguage } from '@/lang/LanguageContext';
+import { usePathname } from 'next/navigation';
 
 export default function AdminLayout({
   children,
@@ -22,8 +22,9 @@ export default function AdminLayout({
   children: React.ReactNode;
 }) {
   const { t } = useLanguage();
+  const pathname = usePathname();
   const [isSidebarOpen, setIsSidebarOpen] = useState(true);
-  const [activeView, setActiveView] = useState('landing');
+  const [activeView, setActiveView] = useState('overview');
   const [mounted, setMounted] = useState(false);
 
   useEffect(() => {
@@ -51,9 +52,9 @@ export default function AdminLayout({
 
   if (!mounted) return null;
 
-  // Bypasses AdminLayout entirely if viewing the public neoclassic Landing page
-  if (activeView === 'landing') {
-    return <LandingPage setActiveView={setActiveView} />;
+  // Bypasses AdminLayout entirely if we are on the landing page routes
+  if (pathname === '/home' || pathname === '/') {
+    return <>{children}</>;
   }
 
   const renderContent = () => {
@@ -72,7 +73,7 @@ export default function AdminLayout({
 
   return (
     <div className="bg-black min-h-screen text-[#f5f5f7] flex flex-col relative w-full overflow-x-hidden font-sans">
-      <Navbar isSidebarOpen={isSidebarOpen} toggleSidebar={() => setIsSidebarOpen(!isSidebarOpen)} setActiveView={setActiveView} />
+      <Navbar isSidebarOpen={isSidebarOpen} toggleSidebar={() => setIsSidebarOpen(!isSidebarOpen)} setActiveView={setActiveView} activeView={activeView} />
       
       <div className="flex flex-1 min-w-0 relative w-full overflow-x-hidden">
         {/* Mobile Backdrop */}
@@ -89,7 +90,7 @@ export default function AdminLayout({
           activeView={activeView}
           setActiveView={setActiveView}
         />
-        <main className="flex-1 overflow-y-auto overflow-x-hidden pb-24 lg:pb-8 transition-all duration-500 p-0 flex flex-col justify-between min-h-[calc(100vh-56px)]">
+        <main className={`flex-1 overflow-y-auto overflow-x-hidden pb-24 lg:pb-8 transition-all duration-300 p-0 flex flex-col justify-between min-h-[calc(100vh-56px)] pt-14 ${isSidebarOpen ? 'lg:pl-56' : 'lg:pl-0'}`}>
           <div className="max-w-none w-full animate-in fade-in slide-in-from-bottom-2 duration-500 flex-1">
             {renderContent()}
           </div>

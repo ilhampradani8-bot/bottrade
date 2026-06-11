@@ -1,5 +1,6 @@
 use crate::get_data::Kline;
 use crate::strategies::{Trade, BacktestResult};
+use crate::strategies::indicators::IndicatorFilter;
 use rust_decimal::Decimal;
 use rust_decimal_macros::dec;
 use serde::Deserialize;
@@ -26,7 +27,7 @@ fn calculate_ema(data: &[Decimal], period: usize) -> Vec<Option<Decimal>> {
     ema
 }
 
-pub fn run_ema_cross_backtest(klines: &[Kline], settings: EmaSettings) -> BacktestResult {
+pub fn run_ema_cross_backtest(klines: &[Kline], settings: EmaSettings, filter: &IndicatorFilter) -> BacktestResult {
     let closes: Vec<Decimal> = klines.iter().map(|k| k.close).collect();
     let fast_ema = calculate_ema(&closes, settings.fast_period);
     let slow_ema = calculate_ema(&closes, settings.slow_period);
@@ -81,7 +82,7 @@ pub fn run_ema_cross_backtest(klines: &[Kline], settings: EmaSettings) -> Backte
 
         // Golden Cross (Fast crosses above Slow) -> BUY
         if position_size == dec!(0) && prev_f_ema <= prev_s_ema && f_ema > s_ema {
-            if balance >= settings.buy_amount {
+            if balance >= settings.buy_amount && filter.allows_buy(i) {
                 entry_price = k.close;
                 position_size = settings.buy_amount / entry_price;
                 balance -= settings.buy_amount;
@@ -127,6 +128,9 @@ pub fn run_ema_cross_backtest(klines: &[Kline], settings: EmaSettings) -> Backte
     let mut indicator_data = std::collections::HashMap::new();
     indicator_data.insert("fast_ema".to_string(), fast_ema);
     indicator_data.insert("slow_ema".to_string(), slow_ema);
+    for (key, val) in &filter.computed_data {
+        indicator_data.insert(key.clone(), val.clone());
+    }
 
     BacktestResult {
         total_trades: trades.len(),

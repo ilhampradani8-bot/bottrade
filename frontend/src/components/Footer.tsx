@@ -21,7 +21,7 @@ export default function Footer({ setActiveView }: { setActiveView?: (view: strin
         <div className="text-[11px] font-bold uppercase tracking-widest text-slate-500 select-none flex items-center gap-1">
           <span>© 2026</span>
           <button 
-            onClick={() => setActiveView && setActiveView('landing')}
+            onClick={() => window.location.href = '/home'}
             className="text-slate-400 hover:text-white transition-colors bg-transparent border-none p-0 font-bold uppercase tracking-widest text-[11px] cursor-pointer"
           >
             TRADINGSAFE
@@ -120,7 +120,7 @@ export default function Footer({ setActiveView }: { setActiveView?: (view: strin
               <h3 className="font-bold text-white uppercase tracking-widest text-[11px]">Useful Links</h3>
               <div className="grid grid-cols-2 gap-x-4 gap-y-2 text-slate-500 uppercase tracking-widest text-[11px]">
                 <button 
-                  onClick={() => setActiveView && setActiveView('landing')} 
+                  onClick={() => window.location.href = '/home'} 
                   className="hover:text-white transition-colors text-left bg-transparent border-none p-0 cursor-pointer font-bold uppercase tracking-widest text-[11px] outline-none"
                 >
                   Home
@@ -169,7 +169,7 @@ export default function Footer({ setActiveView }: { setActiveView?: (view: strin
             <div>
               Copyright &copy; 2026, All Rights Reserved{' '}
               <button 
-                onClick={() => setActiveView && setActiveView('landing')} 
+                onClick={() => window.location.href = '/home'} 
                 className="text-indigo-400 hover:underline cursor-pointer bg-transparent border-none p-0 inline font-bold uppercase tracking-widest text-[11px]"
               >
                 TradingSafe

@@ -11,7 +11,7 @@ export default function StrategiPengaturanItem({ activeView, setActiveView }: an
       className={`w-full sidebar-item ${activeView === 'strategi-pengaturan' ? 'active' : ''}`}
     >
       <Settings size={18} />
-      <span className="truncate">Bot Terminal</span>
+      <span className="truncate">Strategi Setting</span>
     </button>
   );
 }

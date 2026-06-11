@@ -5,10 +5,45 @@ use std::collections::VecDeque;
 use tokio_tungstenite::{connect_async, tungstenite::protocol::Message, tungstenite::client::IntoClientRequest};
 use futures_util::{StreamExt, SinkExt};
 use serde_json::Value;
-use url::Url;
-use crate::notifications;
 
-// Helper to persist simulation state back to strategies table
+async fn get_usd_rate(target_currency: &str) -> f64 {
+    if target_currency == "USD" || target_currency == "USDT" {
+        return 1.0;
+    }
+    let url = "https://open.er-api.com/v6/latest/USD";
+    match reqwest::get(url).await {
+        Ok(resp) => {
+            if let Ok(json) = resp.json::<serde_json::Value>().await {
+                if let Some(rates) = json.get("rates") {
+                    if let Some(rate) = rates.get(target_currency).and_then(|v| v.as_f64()) {
+                        println!("💵 Fetched live USD/{} exchange rate: {}", target_currency, rate);
+                        return rate;
+                    }
+                }
+            }
+        }
+        Err(e) => {
+            eprintln!("⚠️ Failed to fetch live USD/{} rate: {}, using standard fallback", target_currency, e);
+        }
+    }
+    // Fallbacks
+    match target_currency {
+        "IDR" => 16300.0,
+        "EUR" => 0.92,
+        "JPY" => 156.0,
+        "GBP" => 0.78,
+        "SGD" => 1.34,
+        "MYR" => 4.7,
+        "AUD" => 1.5,
+        "CAD" => 1.37,
+        "INR" => 83.5,
+        "PHP" => 58.5,
+        "THB" => 36.5,
+        "VND" => 25400.0,
+        _ => 1.0,
+    }
+}
+
 async fn save_sim_state(
     pool: &PgPool,
     bid: i32,
@@ -26,7 +61,7 @@ async fn save_sim_state(
     }
     let settings_clone = settings_val.clone();
     let _ = sqlx::query!(
-        "UPDATE strategies_by_strategysettings SET settings = $1 WHERE id = $2",
+        "UPDATE simulations_by_simsettings SET settings = $1 WHERE id = $2",
         settings_clone,
         bid
     )
@@ -34,10 +69,10 @@ async fn save_sim_state(
     .await;
 }
 
-pub async fn run_bot_worker(pool: PgPool, bot_id: i32) -> Result<(), Box<dyn Error>> {
-    // 1. Ambil detail bot dari database
+pub async fn run_sim_worker(pool: PgPool, bot_id: i32) -> Result<(), Box<dyn Error>> {
+    // 1. Ambil detail bot dari database simulations_by_simsettings
     let bot_data = sqlx::query!(
-        "SELECT user_id, name, pair, bot_type, settings, take_profit_percentage, stop_loss_percentage FROM strategies_by_strategysettings WHERE id = $1",
+        "SELECT user_id, name, pair, bot_type, settings FROM simulations_by_simsettings WHERE id = $1",
         bot_id
     )
     .fetch_one(&pool)
@@ -47,43 +82,58 @@ pub async fn run_bot_worker(pool: PgPool, bot_id: i32) -> Result<(), Box<dyn Err
     let bot_type = bot_data.bot_type.clone();
     let user_id = bot_data.user_id;
 
-    println!("🚀 [Bot #{}] Starting REAL-TIME engine for {} ({})", bot_id, symbol, bot_type);
+    println!("🚀 [Sim Bot #{}] Starting Simulation engine for {} ({})", bot_id, symbol, bot_type);
 
-    // Setup parameters from settings JSON
     let mut settings = bot_data.settings.clone();
+
+    let currency = settings.get("currency")
+        .and_then(|v| v.as_str())
+        .unwrap_or("IDR")
+        .to_string();
+
+    let rate = get_usd_rate(&currency).await;
+
+    let currency_label = match currency.as_str() {
+        "IDR" => "Rp",
+        "USD" => "$",
+        "USDT" => "USDT",
+        "EUR" => "€",
+        "GBP" => "£",
+        "JPY" => "¥",
+        "SGD" => "S$",
+        "MYR" => "RM",
+        "AUD" => "A$",
+        "CAD" => "C$",
+        "INR" => "₹",
+        "PHP" => "₱",
+        "THB" => "฿",
+        "VND" => "₫",
+        _ => &currency,
+    };
 
     let nominal = settings.get("nominal")
         .and_then(|v| v.as_str())
         .and_then(|s| s.replace(",", "").parse::<f64>().ok())
-        .unwrap_or(1000000.0); // Default Rp 1.000.000
+        .unwrap_or(1000000.0);
 
     let safety_nominal = settings.get("safety_nominal")
         .and_then(|v| v.as_str())
         .and_then(|s| s.replace(",", "").parse::<f64>().ok())
         .unwrap_or(500000.0);
 
-    let take_profit_pct = bot_data.take_profit_percentage
-        .map(|v| v.to_string().parse::<f64>().unwrap_or(1.5))
-        .unwrap_or_else(|| {
-            settings.get("take_profit")
-                .and_then(|v| v.as_str())
-                .and_then(|s| s.parse::<f64>().ok())
-                .unwrap_or(1.5)
-        }) / 100.0;
+    let take_profit_pct = settings.get("take_profit")
+        .and_then(|v| v.as_str().or_else(|| v.as_f64().map(|_| "1.5")))
+        .and_then(|s| s.parse::<f64>().ok())
+        .unwrap_or(1.5) / 100.0;
 
-    let stop_loss_pct = bot_data.stop_loss_percentage
-        .map(|v| v.to_string().parse::<f64>().unwrap_or(5.0))
-        .unwrap_or_else(|| {
-            settings.get("stop_loss")
-                .and_then(|v| v.as_str())
-                .and_then(|s| s.parse::<f64>().ok())
-                .unwrap_or(5.0)
-        }) / 100.0;
+    let stop_loss_pct = settings.get("stop_loss")
+        .and_then(|v| v.as_str().or_else(|| v.as_f64().map(|_| "5.0")))
+        .and_then(|s| s.parse::<f64>().ok())
+        .unwrap_or(5.0) / 100.0;
 
-    // Persisted states inside database JSON
     let mut sim_balance = settings.get("sim_balance")
         .and_then(|v| v.as_f64())
-        .unwrap_or(10000000.0); // Rp 10.000.000 initial virtual capital
+        .unwrap_or(if currency == "IDR" { 10000000.0 } else { 1000.0 });
 
     let mut sim_position = settings.get("sim_position")
         .and_then(|v| v.as_f64())
@@ -97,22 +147,18 @@ pub async fn run_bot_worker(pool: PgPool, bot_id: i32) -> Result<(), Box<dyn Err
         .and_then(|v| v.as_i64())
         .unwrap_or(0);
 
-    // 2. Setup Data Buffer for technical indicators (if needed in future)
     let mut candle_buffer: VecDeque<f64> = VecDeque::with_capacity(200);
 
-    // 3. Connect to Binance WebSocket (Aggregated Trade Stream for Real-time Price)
+    // Binance WebSocket (USDT pairs)
     let ws_url = format!("wss://stream.binance.com:9443/ws/{}@aggTrade", symbol);
-    
     let (ws_stream, _) = connect_async(ws_url.into_client_request()?).await?;
-    println!("✅ [Bot #{}] Connected to Binance WebSocket", bot_id);
+    println!("✅ [Sim Bot #{}] Connected to Binance WebSocket", bot_id);
     
     let (_, mut read) = ws_stream.split();
 
-    // 4. Listen to Real Data
     while let Some(message) = read.next().await {
-        // Cek status terbaru dari database untuk mendeteksi apakah dinonaktifkan
         let current_status = sqlx::query!(
-            "SELECT status FROM strategies_by_strategysettings WHERE id = $1",
+            "SELECT status FROM simulations_by_simsettings WHERE id = $1",
             bot_id
         )
         .fetch_one(&pool)
@@ -120,7 +166,7 @@ pub async fn run_bot_worker(pool: PgPool, bot_id: i32) -> Result<(), Box<dyn Err
 
         if let Ok(row) = current_status {
             if row.status.as_deref() != Some("active") {
-                println!("🛑 [Bot #{}] Status is no longer active (current: {:?}). Exiting worker.", bot_id, row.status);
+                println!("🛑 [Sim Bot #{}] Status is no longer active (current: {:?}). Exiting worker.", bot_id, row.status);
                 break;
             }
         }
@@ -129,17 +175,15 @@ pub async fn run_bot_worker(pool: PgPool, bot_id: i32) -> Result<(), Box<dyn Err
             Ok(Message::Text(text)) => {
                 let json: Value = serde_json::from_str(&text)?;
                 if let Some(price_str) = json.get("p") {
-                    let price: f64 = price_str.as_str().unwrap_or("0").parse()?;
+                    let price_raw: f64 = price_str.as_str().unwrap_or("0").parse()?;
+                    let price = price_raw * rate;
                     
-                    // Update Buffer
                     if candle_buffer.len() >= 200 {
                         candle_buffer.pop_front();
                     }
                     candle_buffer.push_back(price);
 
-                    // --- CORE STRATEGY REALTIME SIMULATOR LOGIC ---
                     if sim_position == 0.0 {
-                        // 1. BUY Base Order (Place base order immediately to start simulation loop)
                         if sim_balance >= nominal {
                             let buy_units = nominal / price;
                             sim_balance -= nominal;
@@ -147,36 +191,25 @@ pub async fn run_bot_worker(pool: PgPool, bot_id: i32) -> Result<(), Box<dyn Err
                             sim_entry_price = price;
                             sim_safety_count = 0;
 
-                            println!("📥 [Bot #{}] Realtime BUY (Base Order) filled: {} units at Rp {}", bot_id, buy_units, price);
+                            println!("📥 [Sim Bot #{}] Realtime BUY (Base Order) filled: {} units at {} {}", bot_id, buy_units, currency_label, price);
 
-                            // Persist to strategies settings JSON
                             save_sim_state(&pool, bot_id, &mut settings, sim_balance, sim_position, sim_entry_price, sim_safety_count).await;
 
-                            // Insert into trades table (UserTrade journal)
                             let _ = sqlx::query!(
-                                "INSERT INTO trades_by_jurnalriwayat (user_id, pair, strategy_type, side, price, amount, status) 
-                                 VALUES ($1, $2, $3, $4, $5, $6, 'COMPLETED')",
+                                "INSERT INTO simulation_trades_by_jurnal (user_id, pair, strategy_type, side, price, amount, currency) 
+                                 VALUES ($1, $2, $3, $4, $5, $6, $7)",
                                 user_id,
                                 bot_data.pair,
                                 bot_type,
                                 "BUY",
                                 price as f64,
-                                buy_units as f64
+                                buy_units as f64,
+                                currency
                             )
                             .execute(&pool)
                             .await;
-
-                            // Send notifications (WhatsApp/Telegram bridge)
-                            let alert_msg = notifications::format_alert_message(
-                                &bot_type,
-                                &bot_data.pair,
-                                "BUY (Base Order)",
-                                price
-                            );
-                            let _ = notifications::send_alert(&alert_msg).await;
                         }
                     } else {
-                        // 2. CHECK EXIT CONDITIONS (Take Profit / Stop Loss)
                         let pnl_pct = (price - sim_entry_price) / sim_entry_price;
 
                         if pnl_pct >= take_profit_pct {
@@ -184,19 +217,19 @@ pub async fn run_bot_worker(pool: PgPool, bot_id: i32) -> Result<(), Box<dyn Err
                             let pnl_val = proceeds - (sim_position * sim_entry_price);
                             sim_balance += proceeds;
                             
-                            println!("🟢 [Bot #{}] TAKE PROFIT hit at price Rp {}. Profit: +{}%", bot_id, price, (pnl_pct * 100.0).round());
+                            println!("🟢 [Sim Bot #{}] TAKE PROFIT hit at price {} {}. Profit: +{}%", bot_id, currency_label, price, (pnl_pct * 100.0).round());
 
-                            // Insert trade logs
                             let _ = sqlx::query!(
-                                "INSERT INTO trades_by_jurnalriwayat (user_id, pair, strategy_type, side, price, amount, pnl, status) 
-                                 VALUES ($1, $2, $3, $4, $5, $6, $7, 'COMPLETED')",
+                                "INSERT INTO simulation_trades_by_jurnal (user_id, pair, strategy_type, side, price, amount, pnl, currency) 
+                                 VALUES ($1, $2, $3, $4, $5, $6, $7, $8)",
                                 user_id,
                                 bot_data.pair,
                                 bot_type,
                                 "SELL",
                                 price as f64,
                                 sim_position as f64,
-                                pnl_val as f64
+                                pnl_val as f64,
+                                currency
                             )
                             .execute(&pool)
                             .await;
@@ -206,33 +239,25 @@ pub async fn run_bot_worker(pool: PgPool, bot_id: i32) -> Result<(), Box<dyn Err
                             sim_safety_count = 0;
 
                             save_sim_state(&pool, bot_id, &mut settings, sim_balance, sim_position, sim_entry_price, sim_safety_count).await;
-
-                            let alert_msg = notifications::format_alert_message(
-                                &bot_type,
-                                &bot_data.pair,
-                                "TAKE PROFIT (SELL)",
-                                price
-                            );
-                            let _ = notifications::send_alert(&alert_msg).await;
                         } 
                         else if pnl_pct <= -stop_loss_pct {
                             let proceeds = sim_position * price;
                             let pnl_val = proceeds - (sim_position * sim_entry_price);
                             sim_balance += proceeds;
 
-                            println!("🔴 [Bot #{}] STOP LOSS hit at price Rp {}. Loss: {}%", bot_id, price, (pnl_pct * 100.0).round());
+                            println!("🔴 [Sim Bot #{}] STOP LOSS hit at price {} {}. Loss: {}%", bot_id, currency_label, price, (pnl_pct * 100.0).round());
 
-                            // Insert trade logs
                             let _ = sqlx::query!(
-                                "INSERT INTO trades_by_jurnalriwayat (user_id, pair, strategy_type, side, price, amount, pnl, status) 
-                                 VALUES ($1, $2, $3, $4, $5, $6, $7, 'COMPLETED')",
+                                "INSERT INTO simulation_trades_by_jurnal (user_id, pair, strategy_type, side, price, amount, pnl, currency) 
+                                 VALUES ($1, $2, $3, $4, $5, $6, $7, $8)",
                                 user_id,
                                 bot_data.pair,
                                 bot_type,
                                 "SELL",
                                 price as f64,
                                 sim_position as f64,
-                                pnl_val as f64
+                                pnl_val as f64,
+                                currency
                             )
                             .execute(&pool)
                             .await;
@@ -242,21 +267,11 @@ pub async fn run_bot_worker(pool: PgPool, bot_id: i32) -> Result<(), Box<dyn Err
                             sim_safety_count = 0;
 
                             save_sim_state(&pool, bot_id, &mut settings, sim_balance, sim_position, sim_entry_price, sim_safety_count).await;
-
-                            let alert_msg = notifications::format_alert_message(
-                                &bot_type,
-                                &bot_data.pair,
-                                "STOP LOSS (SELL)",
-                                price
-                            );
-                            let _ = notifications::send_alert(&alert_msg).await;
                         }
-                        // 3. DCA SAFETY ORDER TRIGGER (If price drops by 2.0% * (safety_count + 1))
                         else if pnl_pct <= -0.02 * (sim_safety_count + 1) as f64 && sim_balance >= safety_nominal && sim_safety_count < 5 {
                             let buy_units = safety_nominal / price;
                             sim_balance -= safety_nominal;
                             
-                            // Re-calculate average entry price
                             let new_total_units = sim_position + buy_units;
                             let new_entry_price = ((sim_entry_price * sim_position) + (price * buy_units)) / new_total_units;
                             
@@ -264,43 +279,35 @@ pub async fn run_bot_worker(pool: PgPool, bot_id: i32) -> Result<(), Box<dyn Err
                             sim_entry_price = new_entry_price;
                             sim_safety_count += 1;
 
-                            println!("📥 [Bot #{}] SAFETY ORDER #{} filled at price Rp {}", bot_id, sim_safety_count, price);
+                            println!("📥 [Sim Bot #{}] SAFETY ORDER #{} filled at price {} {}", bot_id, sim_safety_count, currency_label, price);
 
                             save_sim_state(&pool, bot_id, &mut settings, sim_balance, sim_position, sim_entry_price, sim_safety_count).await;
 
                             let _ = sqlx::query!(
-                                "INSERT INTO trades_by_jurnalriwayat (user_id, pair, strategy_type, side, price, amount, status) 
-                                 VALUES ($1, $2, $3, $4, $5, $6, 'COMPLETED')",
+                                "INSERT INTO simulation_trades_by_jurnal (user_id, pair, strategy_type, side, price, amount, currency) 
+                                 VALUES ($1, $2, $3, $4, $5, $6, $7)",
                                 user_id,
                                 bot_data.pair,
                                 bot_type,
                                 "BUY",
                                 price as f64,
-                                buy_units as f64
+                                buy_units as f64,
+                                currency
                             )
                             .execute(&pool)
                             .await;
-
-                            let alert_msg = notifications::format_alert_message(
-                                &bot_type,
-                                &bot_data.pair,
-                                &format!("BUY (Safety Order #{})", sim_safety_count),
-                                price
-                            );
-                            let _ = notifications::send_alert(&alert_msg).await;
                         }
                     }
 
-                    // Console output for PM2 logs
-                    println!("⚡ [Bot #{}] {} PRICE: {}, BAL: Rp {}, POS: {}", bot_id, bot_type, price, sim_balance.round(), sim_position);
+                    println!("⚡ [Sim Bot #{}] {} PRICE: {} {}, BAL: {} {}, POS: {}", bot_id, bot_type, currency_label, price.round(), currency_label, sim_balance.round(), sim_position);
                 }
             }
             Ok(Message::Close(_)) => {
-                println!("⚠️ [Bot #{}] WebSocket closed by Binance server", bot_id);
+                println!("⚠️ [Sim Bot #{}] WebSocket closed by Binance server", bot_id);
                 break;
             }
             Err(e) => {
-                eprintln!("❌ [Bot #{}] WebSocket Error: {}", bot_id, e);
+                eprintln!("❌ [Sim Bot #{}] WebSocket Error: {}", bot_id, e);
                 break;
             }
             _ => {}

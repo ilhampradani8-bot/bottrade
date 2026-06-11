@@ -1,5 +1,5 @@
-"use client";
+import { redirect } from 'next/navigation';
 
-export default function DashboardPage() {
-  return null;
+export default function RootPage() {
+  redirect('/home');
 }

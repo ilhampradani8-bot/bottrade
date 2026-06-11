@@ -1,0 +1,1413 @@
+<!DOCTYPE html>
+<html lang="en" class="scroll-smooth">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>TradingSafe - Universal Platform for Crypto Trading and Trading Bots</title>
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: {
+                        sans: ['Nunito', 'sans-serif'],
+                        anton: ['Nunito', 'sans-serif'],
+                    }
+                }
+            }
+        }
+    </script>
+    <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@300;400;600;700;800;900&display=swap"
+        rel="stylesheet">
+    <link rel="stylesheet" href="landing.css">
+    <!-- Lenis Smooth Scroll CDN -->
+    <script src="https://unpkg.com/lenis@1.1.18/dist/lenis.min.js"></script>
+    <style>
+        html {
+            background-color: #09090b !important;
+        }
+        /* Lenis custom scroll rules */
+        html.lenis, html.lenis body {
+            height: auto;
+        }
+        .lenis-smooth {
+            scroll-behavior: auto !important;
+        }
+        .lenis-smooth [data-lenis-prevent] {
+            overscroll-behavior: contain;
+        }
+        .lenis-stopped {
+            overflow: hidden;
+        }
+        .lenis-scrolling iframe {
+            pointer-events: none;
+        }
+
+        /* Stacking slide overlaps for desktop */
+        @media (min-width: 768px) {
+            #home {
+                position: sticky;
+                top: 0;
+                z-index: 0;
+                background-color: #e6effb;
+            }
+            #simulator {
+                position: sticky;
+                top: 0;
+                z-index: 10;
+                box-shadow: 0 -10px 40px rgba(0, 0, 0, 0.06);
+                background-color: #ffffff;
+            }
+            #regions {
+                position: sticky;
+                top: 0;
+                z-index: 20;
+                box-shadow: 0 -10px 40px rgba(0, 0, 0, 0.06);
+                background-color: #e6effb;
+            }
+            #exchanges {
+                position: sticky;
+                top: 0;
+                z-index: 30;
+                box-shadow: 0 -10px 40px rgba(0, 0, 0, 0.06);
+                background-color: #ffffff;
+            }
+            #bots {
+                position: sticky;
+                top: 0;
+                z-index: 40;
+                box-shadow: 0 -10px 40px rgba(0, 0, 0, 0.06);
+                background-color: #e6effb;
+            }
+            #features {
+                position: sticky;
+                top: 0;
+                z-index: 50;
+                box-shadow: 0 -10px 40px rgba(0, 0, 0, 0.06);
+                background-color: #ffffff;
+            }
+            #pricing {
+                position: sticky;
+                top: 0;
+                z-index: 60;
+                box-shadow: 0 -10px 40px rgba(0, 0, 0, 0.06);
+                background-color: #e6effb;
+            }
+            #security {
+                position: sticky;
+                top: 0;
+                z-index: 70;
+                box-shadow: 0 -10px 40px rgba(0, 0, 0, 0.06);
+                background-color: #ffffff;
+            }
+            #compliance {
+                position: sticky;
+                top: 0;
+                z-index: 80;
+                box-shadow: 0 -10px 40px rgba(0, 0, 0, 0.06);
+                background-color: #e6effb;
+            }
+            #community {
+                position: sticky;
+                top: 0;
+                z-index: 90;
+                box-shadow: 0 -10px 40px rgba(0, 0, 0, 0.06);
+                background-color: #e6effb;
+            }
+            footer#about {
+                position: relative;
+                z-index: 100;
+                box-shadow: 0 -10px 40px rgba(0, 0, 0, 0.15);
+                background-color: #09090b;
+            }
+        }
+
+        /* Hardware-accelerated dynamic scrolling child animations */
+        .anim-child {
+            opacity: 1;
+            transition: transform 0.15s ease-out, opacity 0.15s ease-out;
+        }
+        @media (min-width: 768px) {
+            .anim-child {
+                opacity: 0;
+                will-change: transform, opacity;
+            }
+        }
+    </style>
+</head>
+
+<body class="min-h-screen text-base font-normal text-slate-800 bg-[#e6effb] font-sans overflow-x-hidden relative">
+
+    <!-- 1. Full-Width Top Navbar Header (Larger vertical padding) -->
+    <nav id="main-nav"
+        class="fixed top-0 left-0 w-full z-[100] flex items-center justify-between px-6 md:px-12 lg:px-20 py-4 bg-[#e6effb]/95 border-b border-slate-300/40 backdrop-blur-md shadow-sm transition-all duration-300">
+
+        <!-- Logo Left (Standard premium sans font, Dark Blue) -->
+        <div class="flex items-center cursor-pointer" onclick="window.location.href='/home'">
+            <span
+                class="font-sans font-bold select-none text-base sm:text-lg tracking-wider text-[#0f2d59] uppercase">TRADINGSAFE</span>
+        </div>
+
+        <!-- Right Group: Links, Lang, Dashboard (Larger normal text size) -->
+        <div class="flex items-center gap-4">
+            <!-- Nav Links with Button-style Flat Dropdowns (Hidden on mobile) -->
+            <ul class="hidden md:flex items-center gap-1">
+                <!-- Platform Dropdown -->
+                <li class="relative group">
+                    <button
+                        class="nav-dropdown-btn px-3 py-2 rounded text-slate-600 hover:text-black font-bold text-xs uppercase tracking-wider flex items-center gap-0.5 select-none"
+                        data-target="platform-dropdown">
+                        <span data-i18n="nav_platform">Platform</span> <span class="text-[9px] opacity-80 font-extrabold ml-1.5 transition-transform duration-300 group-hover:rotate-90 block inline-block">&gt;</span>
+                    </button>
+                    <div id="platform-dropdown"
+                        class="nav-dropdown hidden absolute left-0 top-full mt-[18px] w-48 bg-white border border-slate-200 rounded-md shadow-lg py-2 z-50">
+                        <a href="#simulator"
+                            class="block px-4 py-2 text-xs text-slate-700 hover:bg-slate-50 font-bold uppercase tracking-wider"
+                            data-i18n="nav_simulator">Simulator</a>
+                        <a href="#exchanges"
+                            class="block px-4 py-2 text-xs text-slate-700 hover:bg-slate-50 font-bold uppercase tracking-wider"
+                            data-i18n="nav_exchanges">Exchanges</a>
+                        <a href="#bots"
+                            class="block px-4 py-2 text-xs text-slate-700 hover:bg-slate-50 font-bold uppercase tracking-wider"
+                            data-i18n="nav_bots">Bots</a>
+                        <a href="https://t.me/+evHmTWM1-sg0Mjc9" target="_blank"
+                            class="block px-4 py-2 text-xs text-[#0071e3] hover:text-[#005bb5] font-black uppercase tracking-wider flex items-center justify-between">
+                            <span data-i18n="community_cta">Gabung dengan Komunitas</span> <span class="ml-1">➔</span>
+                        </a>
+                    </div>
+                </li>
+
+                <!-- Trust Dropdown -->
+                <li class="relative group">
+                    <button
+                        class="nav-dropdown-btn px-3 py-2 rounded text-slate-600 hover:text-black font-bold text-xs uppercase tracking-wider flex items-center gap-0.5 select-none"
+                        data-target="trust-dropdown">
+                        <span data-i18n="nav_trust">Trust & Safety</span> <span class="text-[9px] opacity-80 font-extrabold ml-1.5 transition-transform duration-300 group-hover:rotate-90 block inline-block">&gt;</span>
+                    </button>
+                    <div id="trust-dropdown"
+                        class="nav-dropdown hidden absolute left-0 top-full mt-[18px] w-48 bg-white border border-slate-200 rounded-md shadow-lg py-2 z-50">
+                        <a href="#security"
+                            class="block px-4 py-2 text-xs text-slate-700 hover:bg-slate-50 font-bold uppercase tracking-wider"
+                            data-i18n="nav_security">Security</a>
+                        <a href="#compliance"
+                            class="block px-4 py-2 text-xs text-slate-700 hover:bg-slate-50 font-bold uppercase tracking-wider"
+                            data-i18n="nav_compliance">Compliance</a>
+                        <a href="#regions"
+                            class="block px-4 py-2 text-xs text-slate-700 hover:bg-slate-50 font-bold uppercase tracking-wider"
+                            data-i18n="nav_regions">Regions</a>
+                    </div>
+                </li>
+
+                <!-- Company Dropdown -->
+                <li class="relative group">
+                    <button
+                        class="nav-dropdown-btn px-3 py-2 rounded text-slate-600 hover:text-black font-bold text-xs uppercase tracking-wider flex items-center gap-0.5 select-none"
+                        data-target="company-dropdown">
+                        <span data-i18n="nav_company">Company</span> <span class="text-[9px] opacity-80 font-extrabold ml-1.5 transition-transform duration-300 group-hover:rotate-90 block inline-block">&gt;</span>
+                    </button>
+                    <div id="company-dropdown"
+                        class="nav-dropdown hidden absolute left-0 top-full mt-[18px] w-48 bg-white border border-slate-200 rounded-md shadow-lg py-2 z-50">
+                        <a href="#about"
+                            class="block px-4 py-2 text-xs text-slate-700 hover:bg-slate-50 font-bold uppercase tracking-wider"
+                            data-i18n="nav_about">About</a>
+                        <a href="#community"
+                            class="block px-4 py-2 text-xs text-slate-700 hover:bg-slate-50 font-bold uppercase tracking-wider"
+                            data-i18n="nav_community">Community</a>
+                    </div>
+                </li>
+
+                <!-- Pricing Link -->
+                <li>
+                    <a href="#pricing"
+                        class="px-3 py-2 rounded text-slate-600 hover:text-black font-bold text-xs uppercase tracking-wider select-none block"
+                        data-i18n="nav_pricing">Pricing</a>
+                </li>
+            </ul>
+
+            <!-- Language Dropdown (Neumorphic Button & Emerging Dropdown with no scroll) -->
+            <div class="relative">
+                <button id="lang-btn"
+                    class="px-4 py-2 rounded-md nm-button bg-[#e6effb] text-xs font-bold uppercase tracking-wider text-slate-800 border border-white/40 hover:text-black flex items-center gap-2 select-none">
+                    <!-- SVG Globe Icon -->
+                    <svg class="w-4 h-4 text-slate-600" fill="none" stroke="currentColor" stroke-width="2.2"
+                        stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24">
+                        <circle cx="12" cy="12" r="10"></circle>
+                        <line x1="2" y1="12" x2="22" y2="12"></line>
+                        <path
+                            d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z">
+                        </path>
+                    </svg>
+                    <span id="active-lang">ENG</span>
+                    <span class="text-[8px] opacity-60">▼</span>
+                </button>
+                <!-- Dropdown flush to bottom of header (no scroll) -->
+                <div id="lang-dropdown"
+                    class="hidden absolute right-0 top-full mt-[18px] w-52 rounded-md bg-white border border-slate-200 shadow-2xl z-55 p-2">
+                    <!-- Dynamic Lang List -->
+                </div>
+            </div>
+
+            <!-- Auth Buttons Container -->
+            <div class="flex items-center gap-3">
+                <!-- Login Button (Tactile Neumorphic Outline Style) -->
+                <button id="login-btn" onclick="localStorage.setItem('open_auth_modal', 'login'); window.location.href='/dashboard'"
+                    class="px-4 py-2 rounded-md border border-slate-300 hover:border-slate-500 hover:bg-slate-50/50 text-slate-700 hover:text-black font-bold text-xs uppercase tracking-wider transition-colors select-none"
+                    data-i18n="nav_login">
+                    Login
+                </button>
+
+                <!-- Dashboard Button (Tactile Neumorphic Style, Rich Blue) -->
+                <button id="dashboard-btn" onclick="window.location.href='/dashboard'"
+                    class="px-6 py-2 rounded-md nm-button bg-[#0071e3] text-white font-black text-xs uppercase tracking-wider border border-white/20 hover:bg-[#005bb5] transition-colors select-none"
+                    data-i18n="nav_dashboard">
+                    Dashboard
+                </button>
+            </div>
+        </div>
+        <!-- Progress Bar at bottom of Nav -->
+        <div class="absolute bottom-0 left-0 w-full h-[3px] bg-slate-300/20">
+            <div id="scroll-progress" class="h-full bg-[#0071e3] w-0 transition-all duration-75"></div>
+        </div>
+    </nav>
+
+    <!-- 2. Hero Section -->
+    <header id="home"
+        class="w-full text-slate-800 px-6 md:px-12 lg:px-20 min-h-screen flex items-center pt-28 pb-12 relative z-0 overflow-hidden bg-[#e6effb]">
+        <div class="max-w-6xl mx-auto flex flex-col md:flex-row items-start md:items-center justify-between gap-10">
+            <!-- Left Content: Badge, Heading, Subtitle -->
+            <div class="flex-1 text-left space-y-5">
+                <div
+                    class="inline-block text-xs font-bold text-slate-500 uppercase tracking-widest border-b border-slate-300 pb-1">
+                    <span data-i18n="hero_badge">🛡️ SECURE MULTI-EXCHANGE PLATFORM</span>
+                </div>
+
+                <h1
+                    class="font-anton font-bold text-4xl sm:text-5xl md:text-5xl lg:text-6xl uppercase tracking-wider text-black leading-tight">
+                    <span data-i18n="hero_title_1">Universal Platform for </span><span class="text-[#0071e3]"
+                        data-i18n="hero_title_accent_1">Crypto Trading</span><span data-i18n="hero_title_2"> and
+                    </span><span class="text-[#0071e3]" data-i18n="hero_title_accent_2">Trading Bots</span>
+                </h1>
+
+                <p class="text-slate-600 text-sm sm:text-base font-medium leading-relaxed max-w-3xl"
+                    data-i18n="hero_subtitle">
+                    The ultimate tool to automate, analyze, and optimize your portfolio across major cryptocurrency
+                    exchanges. Experience high-performance GRID and DCA bots with 100% risk-free demo trading.
+                </p>
+            </div>
+
+            <!-- Right Content: CTA Buttons (stacked on desktop, responsive on mobile) -->
+            <div class="flex flex-col sm:flex-row md:flex-col gap-4 w-full md:w-auto shrink-0 md:items-end">
+                <button onclick="window.location.href='/dashboard'"
+                    class="px-6 py-3 rounded-md nm-button bg-[#0071e3] text-white font-black text-xs uppercase tracking-widest border border-white/20 hover:text-indigo-600 hover:bg-[#e6effb] text-center w-full md:w-64"
+                    data-i18n="hero_cta_trial">
+                    Start 7-Day Free Trial
+                </button>
+                <button onclick="document.getElementById('bots').scrollIntoView({ behavior: 'smooth' })"
+                    class="px-6 py-3 rounded-md nm-button text-slate-800 font-black text-xs uppercase tracking-widest border border-white/30 text-center w-full md:w-64"
+                    data-i18n="hero_cta_explore">
+                    Explore Trading Bots
+                </button>
+            </div>
+        </div>
+    </header>
+
+    <!-- 3. Showcase Simulator Section (Beautiful Screenshot & Beginner-Friendly UI Showcase) -->
+    <section id="simulator" class="w-full px-6 md:px-12 lg:px-20 py-12 md:py-16 min-h-screen flex items-center bg-white">
+        <div class="max-w-6xl mx-auto w-full">
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-10 items-center">
+                <!-- Left Column: Text content -->
+                <div class="space-y-5 anim-child text-left" data-anim="slide-left" data-anim-start="0.0" data-anim-end="0.6">
+                    <span class="text-[10px] font-black text-[#0071e3] uppercase tracking-widest block" data-i18n="simulator_tagline">EASY & INTUITIVE INTERFACE</span>
+                    <h2 class="font-anton font-bold text-3xl md:text-5xl uppercase tracking-wider text-black leading-tight" data-i18n="simulator_title">
+                        UI/UX Mudah Dipahami Pemula
+                    </h2>
+                    <p class="text-xs text-slate-600 font-medium leading-relaxed" data-i18n="simulator_subtitle">
+                        Deploy complex trading strategies in just a few clicks. Our beginner-friendly design turns complicated mathematical bots into simple visual choices.
+                    </p>
+                </div>
+
+                <!-- Right Column: Browser Mockup Card -->
+                <div class="rounded-md bg-white border border-slate-200 shadow-lg relative overflow-hidden anim-child w-full" data-anim="slide-right" data-anim-start="0.3" data-anim-end="0.9">
+                    <!-- Browser Header Dots -->
+                    <div class="flex items-center justify-between gap-4 px-4 py-3 border-b border-slate-200 bg-slate-50/50">
+                        <div class="flex items-center gap-3">
+                            <div class="flex gap-2">
+                                <span class="w-3 h-3 rounded-full bg-red-400 block shadow-inner"></span>
+                                <span class="w-3 h-3 rounded-full bg-yellow-400 block shadow-inner"></span>
+                                <span class="w-3 h-3 rounded-full bg-green-400 block shadow-inner"></span>
+                            </div>
+                            <div class="px-3 py-0.5 rounded bg-slate-100 text-[10px] font-bold text-slate-500 border border-slate-200">
+                                https://app.tradingsafe.com/strategies
+                            </div>
+                        </div>
+                        <div class="flex items-center gap-2">
+                            <span class="w-2 h-2 rounded-full bg-green-500 animate-pulse"></span>
+                            <span class="text-[9px] font-black tracking-wider uppercase text-slate-400">Live Dashboard</span>
+                        </div>
+                    </div>
+                    
+                    <!-- Screenshot Image -->
+                    <div class="w-full bg-[#f8fafc] p-2 sm:p-4 md:p-6 flex justify-center items-center">
+                        <img src="/img/strategi.png" alt="TradingSafe Strategy Platform" class="max-h-[35vh] md:max-h-[45vh] lg:max-h-[50vh] w-auto rounded border border-slate-200/80 shadow-md object-contain mx-auto" />
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- 3.5 Global Supported Regions Section -->
+    <section id="regions" class="w-full px-6 md:px-12 lg:px-20 py-20 min-h-screen flex items-center mb-20 md:mb-0 bg-[#e6effb]">
+        <div class="max-w-6xl mx-auto space-y-12">
+            <!-- Section Header -->
+            <div class="flex flex-col md:flex-row md:items-end gap-6 justify-between">
+                <div class="space-y-3 text-left anim-child" data-anim="slide-right" data-anim-start="0.0" data-anim-end="0.5">
+                    <span class="text-[10px] font-black text-[#0071e3] uppercase tracking-widest block" data-i18n="regions_tagline">GLOBAL CONNECTIVITY</span>
+                    <h2 class="font-anton font-bold text-3xl md:text-5xl uppercase tracking-wider text-black leading-tight" data-i18n="regions_title">
+                        Mendukung Berbagai Negara
+                    </h2>
+                </div>
+                <p class="text-slate-600 text-xs font-medium max-w-sm text-left anim-child" data-anim="slide-right" data-anim-start="0.1" data-anim-end="0.6" data-i18n="regions_subtitle">
+                    Our trading network is optimized globally. We route execution signals through high-speed endpoints close to regional bursa hubs to minimize slippage.
+                </p>
+            </div>
+
+            <!-- Region Cards Grid -->
+            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 anim-child" data-anim="slide-up" data-anim-start="0.3" data-anim-end="0.9">
+                <!-- Indonesia -->
+                <div class="p-6 rounded-md bg-white border border-slate-200 shadow-sm flex flex-col justify-between space-y-6 hover:shadow-md transition-shadow">
+                    <div class="space-y-4">
+                        <div class="flex items-center justify-between">
+                            <svg class="w-12 h-8 rounded shadow-sm border border-slate-200/50 shrink-0" viewBox="0 0 3 2">
+                                <rect width="3" height="1" fill="#FF0000"/>
+                                <rect y="1" width="3" height="1" fill="#FFFFFF"/>
+                            </svg>
+                            <span class="text-[9px] font-black px-2 py-0.5 rounded bg-green-50 text-green-600 border border-green-200">ACTIVE</span>
+                        </div>
+                        <div class="space-y-1">
+                            <h3 class="font-bold text-lg text-black" data-i18n="region_id_name">Indonesia</h3>
+                            <p class="text-slate-500 text-[10px]" data-i18n="region_id_desc">Optimized Southeast Asian routing</p>
+                        </div>
+                    </div>
+                    <div class="border-t border-slate-100 pt-4 space-y-2 text-[10px]">
+                        <div class="flex justify-between">
+                            <span class="text-slate-400" data-i18n="regions_latency">Latency</span>
+                            <span class="font-bold text-slate-700 font-mono">~5ms</span>
+                        </div>
+                        <div class="flex justify-between">
+                            <span class="text-slate-400" data-i18n="regions_currency">Currency</span>
+                            <span class="font-bold text-slate-700">IDR / USDT</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Europe -->
+                <div class="p-6 rounded-md bg-white border border-slate-200 shadow-sm flex flex-col justify-between space-y-6 hover:shadow-md transition-shadow">
+                    <div class="space-y-4">
+                        <div class="flex items-center justify-between">
+                            <svg class="w-12 h-8 rounded shadow-sm border border-slate-200/50 shrink-0" viewBox="0 0 810 540">
+                                <rect width="810" height="540" fill="#003399"/>
+                                <g transform="translate(405,270) scale(1.5)">
+                                    <g id="eu-star">
+                                        <polygon points="0,-10 3,-3 10,-3 4.5,1 7,8 0,4 -7,8 -4.5,1 -10,-3 -3,-3" fill="#FFCC00"/>
+                                    </g>
+                                    <use href="#eu-star" y="-90" />
+                                    <use href="#eu-star" x="45" y="-77.94" />
+                                    <use href="#eu-star" x="77.94" y="-45" />
+                                    <use href="#eu-star" x="90" />
+                                    <use href="#eu-star" x="77.94" y="45" />
+                                    <use href="#eu-star" x="45" y="77.94" />
+                                    <use href="#eu-star" y="90" />
+                                    <use href="#eu-star" x="-45" y="77.94" />
+                                    <use href="#eu-star" x="-77.94" y="45" />
+                                    <use href="#eu-star" x="-90" />
+                                    <use href="#eu-star" x="-77.94" y="-45" />
+                                    <use href="#eu-star" x="-45" y="-77.94" />
+                                </g>
+                            </svg>
+                            <span class="text-[9px] font-black px-2 py-0.5 rounded bg-green-50 text-green-600 border border-green-200">ACTIVE</span>
+                        </div>
+                        <div class="space-y-1">
+                            <h3 class="font-bold text-lg text-black" data-i18n="region_eu_name">Eropa</h3>
+                            <p class="text-slate-500 text-[10px]" data-i18n="region_eu_desc">GDPR & MiCA Compliant Hub</p>
+                        </div>
+                    </div>
+                    <div class="border-t border-slate-100 pt-4 space-y-2 text-[10px]">
+                        <div class="flex justify-between">
+                            <span class="text-slate-400" data-i18n="regions_latency">Latency</span>
+                            <span class="font-bold text-slate-700 font-mono">~10ms</span>
+                        </div>
+                        <div class="flex justify-between">
+                            <span class="text-slate-400" data-i18n="regions_currency">Currency</span>
+                            <span class="font-bold text-slate-700">EUR / USDT</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Malaysia -->
+                <div class="p-6 rounded-md bg-white border border-slate-200 shadow-sm flex flex-col justify-between space-y-6 hover:shadow-md transition-shadow">
+                    <div class="space-y-4">
+                        <div class="flex items-center justify-between">
+                            <svg class="w-12 h-8 rounded shadow-sm border border-slate-200/50 shrink-0" viewBox="0 0 28 14">
+                                <rect width="28" height="14" fill="#FFFFFF"/>
+                                <rect width="28" height="1" fill="#cc0000"/>
+                                <rect y="2" width="28" height="1" fill="#cc0000"/>
+                                <rect y="4" width="28" height="1" fill="#cc0000"/>
+                                <rect y="6" width="28" height="1" fill="#cc0000"/>
+                                <rect y="8" width="28" height="1" fill="#cc0000"/>
+                                <rect y="10" width="28" height="1" fill="#cc0000"/>
+                                <rect y="12" width="28" height="1" fill="#cc0000"/>
+                                <rect width="14" height="8" fill="#000066"/>
+                                <circle cx="5" cy="4" r="2.5" fill="#ffcc00"/>
+                                <circle cx="5.8" cy="4" r="2.5" fill="#000066"/>
+                                <polygon points="7.5,4 8,3.2 8.8,3.5 8.7,2.7 9.5,2.4 8.7,2.1 8.8,1.3 8,1.6 7.5,0.8 7,1.6 6.2,1.3 6.3,2.1 5.5,2.4 6.3,2.7 6.2,3.5 7,3.2" fill="#ffcc00"/>
+                            </svg>
+                            <span class="text-[9px] font-black px-2 py-0.5 rounded bg-green-50 text-green-600 border border-green-200">ACTIVE</span>
+                        </div>
+                        <div class="space-y-1">
+                            <h3 class="font-bold text-lg text-black" data-i18n="region_my_name">Malaysia</h3>
+                            <p class="text-slate-500 text-[10px]" data-i18n="region_my_desc">Low-latency Southeast Asian node</p>
+                        </div>
+                    </div>
+                    <div class="border-t border-slate-100 pt-4 space-y-2 text-[10px]">
+                        <div class="flex justify-between">
+                            <span class="text-slate-400" data-i18n="regions_latency">Latency</span>
+                            <span class="font-bold text-slate-700 font-mono">~8ms</span>
+                        </div>
+                        <div class="flex justify-between">
+                            <span class="text-slate-400" data-i18n="regions_currency">Currency</span>
+                            <span class="font-bold text-slate-700">MYR / USDT</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- USA -->
+                <div class="p-6 rounded-md bg-white border border-slate-200 shadow-sm flex flex-col justify-between space-y-6 hover:shadow-md transition-shadow">
+                    <div class="space-y-4">
+                        <div class="flex items-center justify-between">
+                            <svg class="w-12 h-8 rounded shadow-sm border border-slate-200/50 shrink-0" viewBox="0 0 760 400">
+                                <rect width="760" height="400" fill="#FFFFFF"/>
+                                <rect width="760" height="30.77" fill="#B22234"/>
+                                <rect y="61.54" width="760" height="30.77" fill="#B22234"/>
+                                <rect y="123.08" width="760" height="30.77" fill="#B22234"/>
+                                <rect y="184.62" width="760" height="30.77" fill="#B22234"/>
+                                <rect y="246.15" width="760" height="30.77" fill="#B22234"/>
+                                <rect y="307.69" width="760" height="30.77" fill="#B22234"/>
+                                <rect y="369.23" width="760" height="30.77" fill="#B22234"/>
+                                <rect width="304" height="215.38" fill="#3C3B6E"/>
+                                <g fill="#FFFFFF" transform="scale(0.8)">
+                                    <polygon points="50,30 53,40 63,40 55,47 58,57 50,50 42,57 45,47 37,40 47,40" />
+                                    <polygon points="100,30 103,40 113,40 105,47 108,57 100,50 92,57 95,47 87,40 97,40" />
+                                    <polygon points="150,30 153,40 163,40 155,47 158,57 150,50 142,57 145,47 137,40 147,40" />
+                                    <polygon points="200,30 203,40 213,40 205,47 208,57 200,50 192,57 195,47 187,40 197,40" />
+                                    <polygon points="250,30 253,40 263,40 255,47 258,57 250,50 242,57 245,47 237,40 247,40" />
+                                    <polygon points="75,70 78,80 88,80 80,87 83,97 75,90 67,97 70,87 62,80 72,80" />
+                                    <polygon points="125,70 128,80 138,80 130,87 133,97 125,90 117,97 120,87 112,80 122,80" />
+                                    <polygon points="175,70 178,80 188,80 180,87 183,97 175,90 167,97 170,87 162,80 172,80" />
+                                    <polygon points="225,70 228,80 238,80 230,87 233,97 225,90 217,97 220,87 212,80 222,80" />
+                                    <polygon points="275,70 278,80 288,80 280,87 283,97 275,90 267,97 270,87 262,80 272,80" />
+                                    <polygon points="50,110 53,120 63,120 55,127 58,137 50,130 42,137 45,127 37,120 47,120" />
+                                    <polygon points="100,110 103,120 113,120 105,127 108,137 100,130 92,137 95,127 87,120 97,120" />
+                                    <polygon points="150,110 153,120 163,120 155,127 158,137 150,130 142,137 145,127 137,120 147,120" />
+                                    <polygon points="200,110 203,120 213,120 205,127 208,137 200,130 192,137 195,127 187,120 197,120" />
+                                    <polygon points="250,110 253,120 263,120 255,127 258,137 250,130 242,137 245,127 237,120 247,120" />
+                                </g>
+                            </svg>
+                            <span class="text-[9px] font-black px-2 py-0.5 rounded bg-green-50 text-green-600 border border-green-200">ACTIVE</span>
+                        </div>
+                        <div class="space-y-1">
+                            <h3 class="font-bold text-lg text-black" data-i18n="region_us_name">Amerika Serikat</h3>
+                            <p class="text-slate-500 text-[10px]" data-i18n="region_us_desc">FinCEN & SEC Compliant Endpoints</p>
+                        </div>
+                    </div>
+                    <div class="border-t border-slate-100 pt-4 space-y-2 text-[10px]">
+                        <div class="flex justify-between">
+                            <span class="text-slate-400" data-i18n="regions_latency">Latency</span>
+                            <span class="font-bold text-slate-700 font-mono">~12ms</span>
+                        </div>
+                        <div class="flex justify-between">
+                            <span class="text-slate-400" data-i18n="regions_currency">Currency</span>
+                            <span class="font-bold text-slate-700">USD / USDC</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- 4. Supported Exchanges (Large 3-Row Parallax Ticker) -->
+    <section id="exchanges" class="w-full min-h-screen flex flex-col justify-center mb-20 md:mb-0 overflow-hidden py-20 bg-white border-y border-slate-300/20">
+        <div class="max-w-6xl mx-auto px-6 md:px-12 lg:px-20 mb-8">
+            <div class="flex flex-col md:flex-row md:items-end gap-6 justify-between">
+                <div class="space-y-3 text-left anim-child" data-anim="slide-left" data-anim-start="0.0" data-anim-end="0.5">
+                    <span class="text-[10px] font-black text-[#0071e3] uppercase tracking-widest block"
+                        data-i18n="exchanges_title">111+ SUPPORTED CRYPTO EXCHANGES & CONNECTIONS</span>
+                    <h2 class="font-anton font-bold text-3xl md:text-5xl uppercase tracking-wider text-black">
+                        Connect Once. Trade Everywhere.
+                    </h2>
+                </div>
+                <p class="text-slate-600 text-xs font-medium max-w-sm text-left anim-child" data-anim="slide-left" data-anim-start="0.1" data-anim-end="0.6" data-i18n="exchanges_subtitle">
+                    Connect your exchange APIs securely to automate portfolio management, deploy DCA or GRID strategy
+                    configurations, and track real-time analytics from a unified terminal.
+                </p>
+            </div>
+        </div>
+
+        <div class="relative w-full overflow-hidden py-4 space-y-4 anim-child" data-anim="slide-right" data-anim-start="0.2" data-anim-end="0.8">
+            <!-- Fade overlays on left/right for smooth premium appearance -->
+            <div
+                class="absolute left-0 top-0 bottom-0 w-20 md:w-40 bg-gradient-to-r from-[#e6effb] to-transparent z-10 pointer-events-none">
+            </div>
+            <div
+                class="absolute right-0 top-0 bottom-0 w-20 md:w-40 bg-gradient-to-l from-[#e6effb] to-transparent z-10 pointer-events-none">
+            </div>
+
+            <!-- Row 1: Leftward Scroll -->
+            <div class="animate-marquee gap-4 select-none">
+                <!-- Original set -->
+                <div class="flex gap-4 shrink-0 pr-4">
+                    <div
+                        class="py-3 px-6 rounded-md bg-[#F3BA2F]/10 border border-[#F3BA2F]/30 text-xs font-black tracking-wider text-[#b38000]">
+                        Binance</div>
+                    <div
+                        class="py-3 px-6 rounded-md bg-[#0052FF]/10 border border-[#0052FF]/30 text-xs font-black tracking-wider text-[#0052FF]">
+                        Coinbase</div>
+                    <div
+                        class="py-3 px-6 rounded-md bg-[#5741D9]/10 border border-[#5741D9]/30 text-xs font-black tracking-wider text-[#5741D9]">
+                        Kraken</div>
+                    <div
+                        class="py-3 px-6 rounded-md bg-[#00D632]/10 border border-[#00D632]/30 text-xs font-black tracking-wider text-[#00a625]">
+                        OKX</div>
+                    <div
+                        class="py-3 px-6 rounded-md bg-[#FFB300]/10 border border-[#FFB300]/30 text-xs font-black tracking-wider text-[#b37d00]">
+                        Bybit</div>
+                    <div
+                        class="py-3 px-6 rounded-md bg-[#009375]/10 border border-[#009375]/30 text-xs font-black tracking-wider text-[#009375]">
+                        KuCoin</div>
+                    <div
+                        class="py-3 px-6 rounded-md bg-[#00A9E0]/10 border border-[#00A9E0]/30 text-xs font-black tracking-wider text-[#007ba3]">
+                        Indodax</div>
+                    <div
+                        class="py-3 px-6 rounded-md bg-[#00B050]/10 border border-[#00B050]/30 text-xs font-black tracking-wider text-[#00803a]">
+                        Tokocrypto</div>
+                    <div
+                        class="py-3 px-6 rounded-md bg-[#D6343F]/10 border border-[#D6343F]/30 text-xs font-black tracking-wider text-[#d6343f]">
+                        Gate.io</div>
+                    <div
+                        class="py-3 px-6 rounded-md bg-[#007AFF]/10 border border-[#007AFF]/30 text-xs font-black tracking-wider text-[#007aff]">
+                        Huobi</div>
+                    <div
+                        class="py-3 px-6 rounded-md bg-[#009688]/10 border border-[#009688]/30 text-xs font-black tracking-wider text-[#009688]">
+                        Bitfinex</div>
+                    <div
+                        class="py-3 px-6 rounded-md bg-[#00C880]/10 border border-[#00C880]/30 text-xs font-black tracking-wider text-[#009e65]">
+                        MEXC</div>
+                </div>
+                <!-- Duplicated set -->
+                <div class="flex gap-4 shrink-0 pr-4">
+                    <div
+                        class="py-3 px-6 rounded-md bg-[#F3BA2F]/10 border border-[#F3BA2F]/30 text-xs font-black tracking-wider text-[#b38000]">
+                        Binance</div>
+                    <div
+                        class="py-3 px-6 rounded-md bg-[#0052FF]/10 border border-[#0052FF]/30 text-xs font-black tracking-wider text-[#0052FF]">
+                        Coinbase</div>
+                    <div
+                        class="py-3 px-6 rounded-md bg-[#5741D9]/10 border border-[#5741D9]/30 text-xs font-black tracking-wider text-[#5741D9]">
+                        Kraken</div>
+                    <div
+                        class="py-3 px-6 rounded-md bg-[#00D632]/10 border border-[#00D632]/30 text-xs font-black tracking-wider text-[#00a625]">
+                        OKX</div>
+                    <div
+                        class="py-3 px-6 rounded-md bg-[#FFB300]/10 border border-[#FFB300]/30 text-xs font-black tracking-wider text-[#b37d00]">
+                        Bybit</div>
+                    <div
+                        class="py-3 px-6 rounded-md bg-[#009375]/10 border border-[#009375]/30 text-xs font-black tracking-wider text-[#009375]">
+                        KuCoin</div>
+                    <div
+                        class="py-3 px-6 rounded-md bg-[#00A9E0]/10 border border-[#00A9E0]/30 text-xs font-black tracking-wider text-[#007ba3]">
+                        Indodax</div>
+                    <div
+                        class="py-3 px-6 rounded-md bg-[#00B050]/10 border border-[#00B050]/30 text-xs font-black tracking-wider text-[#00803a]">
+                        Tokocrypto</div>
+                    <div
+                        class="py-3 px-6 rounded-md bg-[#D6343F]/10 border border-[#D6343F]/30 text-xs font-black tracking-wider text-[#d6343f]">
+                        Gate.io</div>
+                    <div
+                        class="py-3 px-6 rounded-md bg-[#007AFF]/10 border border-[#007AFF]/30 text-xs font-black tracking-wider text-[#007aff]">
+                        Huobi</div>
+                    <div
+                        class="py-3 px-6 rounded-md bg-[#009688]/10 border border-[#009688]/30 text-xs font-black tracking-wider text-[#009688]">
+                        Bitfinex</div>
+                    <div
+                        class="py-3 px-6 rounded-md bg-[#00C880]/10 border border-[#00C880]/30 text-xs font-black tracking-wider text-[#009e65]">
+                        MEXC</div>
+                </div>
+            </div>
+
+            <!-- Row 2: Rightward Scroll (Reverse Marquee) -->
+            <div class="animate-marquee-reverse gap-4 select-none">
+                <!-- Original set -->
+                <div class="flex gap-4 shrink-0 pr-4">
+                    <div
+                        class="py-3 px-6 rounded-md bg-[#6966FF]/10 border border-[#6966FF]/30 text-xs font-black tracking-wider text-[#6966FF]">
+                        dYdX</div>
+                    <div
+                        class="py-3 px-6 rounded-md bg-[#E26D24]/10 border border-[#E26D24]/30 text-xs font-black tracking-wider text-[#d25c14]">
+                        Deribit</div>
+                    <div
+                        class="py-3 px-6 rounded-md bg-[#00F0FF]/10 border border-[#00F0FF]/30 text-xs font-black tracking-wider text-[#008f9f]">
+                        Bitget</div>
+                    <div
+                        class="py-3 px-6 rounded-md bg-[#00E3A5]/10 border border-[#00E3A5]/30 text-xs font-black tracking-wider text-[#00936b]">
+                        Phemex</div>
+                    <div
+                        class="py-3 px-6 rounded-md bg-[#003B9F]/10 border border-[#003B9F]/30 text-xs font-black tracking-wider text-[#003b9f]">
+                        Upbit</div>
+                    <div
+                        class="py-3 px-6 rounded-md bg-[#0060A9]/10 border border-[#0060A9]/30 text-xs font-black tracking-wider text-[#0060a9]">
+                        Bittrex</div>
+                    <div
+                        class="py-3 px-6 rounded-md bg-[#25C4F4]/10 border border-[#25C4F4]/30 text-xs font-black tracking-wider text-[#1796be]">
+                        Gemini</div>
+                    <div
+                        class="py-3 px-6 rounded-md bg-[#4DCA8E]/10 border border-[#4DCA8E]/30 text-xs font-black tracking-wider text-[#329864]">
+                        Bitstamp</div>
+                    <div
+                        class="py-3 px-6 rounded-md bg-[#F37021]/10 border border-[#F37021]/30 text-xs font-black tracking-wider text-[#c75510]">
+                        Bithumb</div>
+                    <div
+                        class="py-3 px-6 rounded-md bg-[#006064]/10 border border-[#006064]/30 text-xs font-black tracking-wider text-[#006064]">
+                        Poloniex</div>
+                    <div
+                        class="py-3 px-6 rounded-md bg-[#007AFF]/10 border border-[#007AFF]/30 text-xs font-black tracking-wider text-[#007aff]">
+                        Huobi</div>
+                    <div
+                        class="py-3 px-6 rounded-md bg-[#F3BA2F]/10 border border-[#F3BA2F]/30 text-xs font-black tracking-wider text-[#b38000]">
+                        Binance</div>
+                </div>
+                <!-- Duplicated set -->
+                <div class="flex gap-4 shrink-0 pr-4">
+                    <div
+                        class="py-3 px-6 rounded-md bg-[#6966FF]/10 border border-[#6966FF]/30 text-xs font-black tracking-wider text-[#6966FF]">
+                        dYdX</div>
+                    <div
+                        class="py-3 px-6 rounded-md bg-[#E26D24]/10 border border-[#E26D24]/30 text-xs font-black tracking-wider text-[#d25c14]">
+                        Deribit</div>
+                    <div
+                        class="py-3 px-6 rounded-md bg-[#00F0FF]/10 border border-[#00F0FF]/30 text-xs font-black tracking-wider text-[#008f9f]">
+                        Bitget</div>
+                    <div
+                        class="py-3 px-6 rounded-md bg-[#00E3A5]/10 border border-[#00E3A5]/30 text-xs font-black tracking-wider text-[#00936b]">
+                        Phemex</div>
+                    <div
+                        class="py-3 px-6 rounded-md bg-[#003B9F]/10 border border-[#003B9F]/30 text-xs font-black tracking-wider text-[#003b9f]">
+                        Upbit</div>
+                    <div
+                        class="py-3 px-6 rounded-md bg-[#0060A9]/10 border border-[#0060A9]/30 text-xs font-black tracking-wider text-[#0060a9]">
+                        Bittrex</div>
+                    <div
+                        class="py-3 px-6 rounded-md bg-[#25C4F4]/10 border border-[#25C4F4]/30 text-xs font-black tracking-wider text-[#1796be]">
+                        Gemini</div>
+                    <div
+                        class="py-3 px-6 rounded-md bg-[#4DCA8E]/10 border border-[#4DCA8E]/30 text-xs font-black tracking-wider text-[#329864]">
+                        Bitstamp</div>
+                    <div
+                        class="py-3 px-6 rounded-md bg-[#F37021]/10 border border-[#F37021]/30 text-xs font-black tracking-wider text-[#c75510]">
+                        Bithumb</div>
+                    <div
+                        class="py-3 px-6 rounded-md bg-[#006064]/10 border border-[#006064]/30 text-xs font-black tracking-wider text-[#006064]">
+                        Poloniex</div>
+                    <div
+                        class="py-3 px-6 rounded-md bg-[#007AFF]/10 border border-[#007AFF]/30 text-xs font-black tracking-wider text-[#007aff]">
+                        Huobi</div>
+                    <div
+                        class="py-3 px-6 rounded-md bg-[#F3BA2F]/10 border border-[#F3BA2F]/30 text-xs font-black tracking-wider text-[#b38000]">
+                        Binance</div>
+                </div>
+            </div>
+
+            <!-- Row 3: Leftward Scroll -->
+            <div class="animate-marquee gap-4 select-none">
+                <!-- Original set -->
+                <div class="flex gap-4 shrink-0 pr-4">
+                    <div
+                        class="py-3 px-6 rounded-md bg-[#0052FF]/10 border border-[#0052FF]/30 text-xs font-black tracking-wider text-[#0052FF]">
+                        Coinbase</div>
+                    <div
+                        class="py-3 px-6 rounded-md bg-[#5741D9]/10 border border-[#5741D9]/30 text-xs font-black tracking-wider text-[#5741D9]">
+                        Kraken</div>
+                    <div
+                        class="py-3 px-6 rounded-md bg-[#00D632]/10 border border-[#00D632]/30 text-xs font-black tracking-wider text-[#00a625]">
+                        OKX</div>
+                    <div
+                        class="py-3 px-6 rounded-md bg-[#FFB300]/10 border border-[#FFB300]/30 text-xs font-black tracking-wider text-[#b37d00]">
+                        Bybit</div>
+                    <div
+                        class="py-3 px-6 rounded-md bg-[#009375]/10 border border-[#009375]/30 text-xs font-black tracking-wider text-[#009375]">
+                        KuCoin</div>
+                    <div
+                        class="py-3 px-6 rounded-md bg-[#00A9E0]/10 border border-[#00A9E0]/30 text-xs font-black tracking-wider text-[#007ba3]">
+                        Indodax</div>
+                    <div
+                        class="py-3 px-6 rounded-md bg-[#00B050]/10 border border-[#00B050]/30 text-xs font-black tracking-wider text-[#00803a]">
+                        Tokocrypto</div>
+                    <div
+                        class="py-3 px-6 rounded-md bg-[#D6343F]/10 border border-[#D6343F]/30 text-xs font-black tracking-wider text-[#d6343f]">
+                        Gate.io</div>
+                    <div
+                        class="py-3 px-6 rounded-md bg-[#009688]/10 border border-[#009688]/30 text-xs font-black tracking-wider text-[#009688]">
+                        Bitfinex</div>
+                    <div
+                        class="py-3 px-6 rounded-md bg-[#00C880]/10 border border-[#00C880]/30 text-xs font-black tracking-wider text-[#009e65]">
+                        MEXC</div>
+                    <div
+                        class="py-3 px-6 rounded-md bg-[#00F0FF]/10 border border-[#00F0FF]/30 text-xs font-black tracking-wider text-[#008f9f]">
+                        Bitget</div>
+                    <div
+                        class="py-3 px-6 rounded-md bg-[#6966FF]/10 border border-[#6966FF]/30 text-xs font-black tracking-wider text-[#6966FF]">
+                        dYdX</div>
+                </div>
+                <!-- Duplicated set -->
+                <div class="flex gap-4 shrink-0 pr-4">
+                    <div
+                        class="py-3 px-6 rounded-md bg-[#0052FF]/10 border border-[#0052FF]/30 text-xs font-black tracking-wider text-[#0052FF]">
+                        Coinbase</div>
+                    <div
+                        class="py-3 px-6 rounded-md bg-[#5741D9]/10 border border-[#5741D9]/30 text-xs font-black tracking-wider text-[#5741D9]">
+                        Kraken</div>
+                    <div
+                        class="py-3 px-6 rounded-md bg-[#00D632]/10 border border-[#00D632]/30 text-xs font-black tracking-wider text-[#00a625]">
+                        OKX</div>
+                    <div
+                        class="py-3 px-6 rounded-md bg-[#FFB300]/10 border border-[#FFB300]/30 text-xs font-black tracking-wider text-[#b37d00]">
+                        Bybit</div>
+                    <div
+                        class="py-3 px-6 rounded-md bg-[#009375]/10 border border-[#009375]/30 text-xs font-black tracking-wider text-[#009375]">
+                        KuCoin</div>
+                    <div
+                        class="py-3 px-6 rounded-md bg-[#00A9E0]/10 border border-[#00A9E0]/30 text-xs font-black tracking-wider text-[#007ba3]">
+                        Indodax</div>
+                    <div
+                        class="py-3 px-6 rounded-md bg-[#00B050]/10 border border-[#00B050]/30 text-xs font-black tracking-wider text-[#00803a]">
+                        Tokocrypto</div>
+                    <div
+                        class="py-3 px-6 rounded-md bg-[#D6343F]/10 border border-[#D6343F]/30 text-xs font-black tracking-wider text-[#d6343f]">
+                        Gate.io</div>
+                    <div
+                        class="py-3 px-6 rounded-md bg-[#009688]/10 border border-[#009688]/30 text-xs font-black tracking-wider text-[#009688]">
+                        Bitfinex</div>
+                    <div
+                        class="py-3 px-6 rounded-md bg-[#00C880]/10 border border-[#00C880]/30 text-xs font-black tracking-wider text-[#009e65]">
+                        MEXC</div>
+                    <div
+                        class="py-3 px-6 rounded-md bg-[#00F0FF]/10 border border-[#00F0FF]/30 text-xs font-black tracking-wider text-[#008f9f]">
+                        Bitget</div>
+                    <div
+                        class="py-3 px-6 rounded-md bg-[#6966FF]/10 border border-[#6966FF]/30 text-xs font-black tracking-wider text-[#6966FF]">
+                        dYdX</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Platform Stats Grid (Consolidated at the bottom of Exchanges Section) -->
+        <div class="max-w-6xl mx-auto mt-16 px-6 md:px-12 lg:px-20 grid grid-cols-2 md:grid-cols-4 gap-6 anim-child" data-anim="slide-up" data-anim-start="0.3" data-anim-end="0.9">
+            <div class="p-6 rounded-md bg-white border border-slate-200 shadow-sm text-center space-y-2">
+                <span class="text-3xl font-anton font-bold text-black tracking-wide block">3.7M+</span>
+                <p class="text-[9px] font-black text-slate-500 uppercase tracking-widest leading-snug">ACTIVE BOTS IN PLAY</p>
+            </div>
+            <div class="p-6 rounded-md bg-white border border-slate-200 shadow-sm text-center space-y-2">
+                <span class="text-3xl font-anton font-bold text-black tracking-wide block">$410B+</span>
+                <p class="text-[9px] font-black text-slate-500 uppercase tracking-widest leading-snug">TOTAL VOLUME ACCRUE</p>
+            </div>
+            <div class="p-6 rounded-md bg-white border border-slate-200 shadow-sm text-center space-y-2">
+                <span class="text-3xl font-anton font-bold text-black tracking-wide block">15+</span>
+                <p class="text-[9px] font-black text-slate-500 uppercase tracking-widest leading-snug">SUPPORTED EXCHANGES</p>
+            </div>
+            <div class="p-6 rounded-md bg-white border border-slate-200 shadow-sm text-center space-y-2">
+                <span class="text-3xl font-anton font-bold text-black tracking-wide block">+18.4%</span>
+                <p class="text-[9px] font-black text-slate-500 uppercase tracking-widest leading-snug">AVERAGE MONTHLY YIELD</p>
+            </div>
+        </div>
+    </section>
+
+    <!-- 6. Bots Section (Flat Cards) -->
+    <section id="bots" class="w-full px-6 md:px-12 lg:px-20 py-20 min-h-screen flex items-center mb-24 md:mb-0 bg-[#e6effb]">
+        <div class="max-w-6xl mx-auto space-y-12">
+            <div class="flex flex-col md:flex-row md:items-end gap-6 justify-between">
+                <div class="space-y-3 anim-child" data-anim="slide-left" data-anim-start="0.0" data-anim-end="0.5">
+                    <span class="text-[10px] font-black text-[#0071e3] uppercase tracking-widest block"
+                        data-i18n="bot_tagline">AUTOMATED QUANT STRATEGIES</span>
+                    <h2 class="font-anton font-bold text-3xl md:text-5xl uppercase tracking-wider text-black"
+                        data-i18n="bot_title">
+                        Automated Bots Built for Every Market
+                    </h2>
+                </div>
+                <p class="text-slate-600 text-xs font-medium max-w-sm anim-child" data-anim="slide-left" data-anim-start="0.1" data-anim-end="0.6" data-i18n="bot_subtitle">
+                    Deploy battle-tested quantitative algorithms. Eliminate emotional errors, trade 24/7, and protect
+                    your capital with advanced trailing features.
+                </p>
+            </div>
+
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-8 anim-child" data-anim="slide-up" data-anim-start="0.3" data-anim-end="0.9">
+                <!-- GRID Bot (Flat Card) -->
+                <div
+                    class="rounded-md p-6 bg-white border border-slate-200 shadow-sm space-y-4 flex flex-col justify-between">
+                    <div class="space-y-3">
+                        <div
+                            class="w-10 h-10 rounded bg-blue-100 flex items-center justify-center text-[#0071e3] font-anton font-bold">
+                            G</div>
+                        <h3 class="font-anton font-bold text-lg uppercase text-black tracking-wider"
+                            data-i18n="bot_grid_title">GRID Bot</h3>
+                        <p class="text-xs text-slate-600 leading-relaxed font-medium" data-i18n="bot_grid_desc">
+                            Perfect for sideways/ranging markets. Automatically places buy and sell limits at predefined
+                            intervals. Accumulates micro-profits from natural volatility.
+                        </p>
+                    </div>
+                    <ul class="space-y-1.5 text-[10px] text-slate-500 font-bold uppercase tracking-wider font-mono">
+                        <li data-i18n="bot_grid_b1">✓ Range-bound automation</li>
+                        <li data-i18n="bot_grid_b2">✓ Multi-tier profit capture</li>
+                        <li data-i18n="bot_grid_b3">✓ Automated grid readjustments</li>
+                    </ul>
+                </div>
+
+                <!-- DCA Bot (Flat Card) -->
+                <div
+                    class="rounded-md p-6 bg-white border border-slate-200 shadow-sm space-y-4 flex flex-col justify-between">
+                    <div class="space-y-3">
+                        <div
+                            class="w-10 h-10 rounded bg-purple-100 flex items-center justify-center text-purple-600 font-anton font-bold">
+                            D</div>
+                        <h3 class="font-anton font-bold text-lg uppercase text-black tracking-wider"
+                            data-i18n="bot_dca_title">DCA Bot</h3>
+                        <p class="text-xs text-slate-600 leading-relaxed font-medium" data-i18n="bot_dca_desc">
+                            Dollar Cost Averaging. Ideal for trending up/down markets. Auto-buys assets in steps,
+                            bringing down your average entry price and speeding up break-even points.
+                        </p>
+                    </div>
+                    <ul class="space-y-1.5 text-[10px] text-slate-500 font-bold uppercase tracking-wider font-mono">
+                        <li data-i18n="bot_dca_b1">✓ Volatile price smoothing</li>
+                        <li data-i18n="bot_dca_b2">✓ Target profit multipliers</li>
+                        <li data-i18n="bot_dca_b3">✓ Multi-level support buy-ins</li>
+                    </ul>
+                </div>
+
+                <!-- BTD Bot (Flat Card) -->
+                <div
+                    class="rounded-md p-6 bg-white border border-slate-200 shadow-sm space-y-4 flex flex-col justify-between">
+                    <div class="space-y-3">
+                        <div
+                            class="w-10 h-10 rounded bg-emerald-100 flex items-center justify-center text-emerald-600 font-anton font-bold">
+                            B</div>
+                        <h3 class="font-anton font-bold text-lg uppercase text-black tracking-wider"
+                            data-i18n="bot_btd_title">Buy the Dip</h3>
+                        <p class="text-xs text-slate-600 leading-relaxed font-medium" data-i18n="bot_btd_desc">
+                            Automatically accumulates major crypto coins during price drops or corrections. Ensures you
+                            buy at strong support zones, positioning your portfolio for the next leg up.
+                        </p>
+                    </div>
+                    <ul class="space-y-1.5 text-[10px] text-slate-500 font-bold uppercase tracking-wider font-mono">
+                        <li data-i18n="bot_btd_b1">✓ Automated dip capture</li>
+                        <li data-i18n="bot_btd_b2">✓ Support level alerts</li>
+                        <li data-i18n="bot_btd_b3">✓ Risk-minimized scaling</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- 7. Features Section (Flat white container) -->
+    <section id="features" class="w-full px-6 md:px-12 lg:px-20 py-20 min-h-screen flex items-center mb-24 md:mb-0 bg-white">
+        <div class="max-w-6xl mx-auto rounded-md bg-white border border-slate-200 p-8 shadow-sm">
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-10 items-center">
+                <div class="space-y-5 anim-child" data-anim="slide-left" data-anim-start="0.0" data-anim-end="0.6">
+                    <span class="text-[10px] font-black text-[#0071e3] uppercase tracking-widest block"
+                        data-i18n="terminal_tagline">ADVANCED SMART TERMINAL</span>
+                    <h2 class="font-anton font-bold text-3xl md:text-5xl uppercase tracking-wider text-black leading-tight"
+                        data-i18n="terminal_title">
+                        Control All Portfolio Assets from One Interface
+                    </h2>
+                    <p class="text-xs text-slate-600 font-medium leading-relaxed" data-i18n="terminal_subtitle">
+                        Connect multiple exchanges instantly. Execute advanced orders that your exchange doesn't
+                        natively support, like trailing stop losses, take profits, and automated scale-outs.
+                    </p>
+                    <div class="grid grid-cols-2 gap-4">
+                        <div class="p-3 rounded bg-slate-50 border border-slate-200 text-center space-y-1">
+                            <span class="text-sm font-bold text-black font-mono"
+                                data-i18n="terminal_stat1_val">12+</span>
+                            <p class="text-[8px] font-black uppercase text-slate-500 tracking-wider"
+                                data-i18n="terminal_stat1_lbl">Advanced Order Types</p>
+                        </div>
+                        <div class="p-3 rounded bg-slate-50 border border-slate-200 text-center space-y-1">
+                            <span class="text-sm font-bold text-black font-mono" data-i18n="terminal_stat2_val">
+                                < 15ms</span>
+                                    <p class="text-[8px] font-black uppercase text-slate-500 tracking-wider"
+                                        data-i18n="terminal_stat2_lbl">Execution Latency</p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Portfolio Spread Ring Chart (Flat slate sub-container) -->
+                <div class="p-4 rounded-md bg-slate-50 border border-slate-200 flex flex-col justify-between space-y-4 anim-child" data-anim="slide-right" data-anim-start="0.3" data-anim-end="0.9">
+                    <div class="flex items-center justify-between text-xs font-bold border-b border-slate-200 pb-2">
+                        <span>PORTFOLIO ASSET SPREAD</span>
+                        <span class="text-[#0071e3]">LIVE PORTFOLIO</span>
+                    </div>
+                    <div class="flex items-center justify-center p-4">
+                        <svg class="w-40 h-40" viewBox="0 0 36 36">
+                            <path class="text-slate-200" stroke-width="3.5" stroke="currentColor" fill="none"
+                                d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831" />
+                            <path class="text-blue-500" stroke-dasharray="50, 100" stroke-width="3.5"
+                                stroke-linecap="round" stroke="currentColor" fill="none"
+                                d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831" />
+                            <path class="text-purple-500" stroke-dasharray="30, 100" stroke-width="3.5"
+                                stroke-linecap="round" stroke="currentColor" fill="none"
+                                d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831" />
+                            <path class="text-[#F1BF0A]" stroke-dasharray="20, 100" stroke-width="3.5"
+                                stroke-linecap="round" stroke="currentColor" fill="none"
+                                d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831" />
+                        </svg>
+                    </div>
+                    <div
+                        class="grid grid-cols-3 gap-2 text-[8px] font-black uppercase text-center tracking-wider text-slate-500">
+                        <div class="flex flex-col items-center"><span
+                                class="w-2.5 h-2.5 rounded bg-blue-500 block mb-1"></span> BTC: 50%</div>
+                        <div class="flex flex-col items-center"><span
+                                class="w-2.5 h-2.5 rounded bg-purple-500 block mb-1"></span> ETH: 30%</div>
+                        <div class="flex flex-col items-center"><span
+                                class="w-2.5 h-2.5 rounded bg-[#F1BF0A] block mb-1"></span> USDT: 20%</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- 7b. Pricing Section (Light background, premium SaaS pricing) -->
+    <!-- 7b. Pricing Section (Light background, premium SaaS pricing) -->
+    <section id="pricing" class="w-full px-6 md:px-12 lg:px-20 py-10 md:py-12 min-h-screen flex items-center mb-24 md:mb-0 bg-[#e6effb]">
+        <div class="max-w-6xl mx-auto space-y-6 w-full">
+            <!-- Header -->
+            <div class="flex flex-col md:flex-row md:items-end gap-6 justify-between">
+                <div class="space-y-3 text-left anim-child" data-anim="slide-left" data-anim-start="0.0" data-anim-end="0.5">
+                    <span class="text-[10px] font-black text-[#0071e3] uppercase tracking-widest block"
+                        data-i18n="pricing_tagline">PILIHAN PAKET FLEKSIBEL</span>
+                    <h2 class="font-anton font-bold text-2xl md:text-4xl uppercase tracking-wider text-black leading-tight"
+                        data-i18n="pricing_title">
+                        Paket SaaS Dibuat Untuk Setiap Tingkatan
+                    </h2>
+                </div>
+                <p class="text-slate-600 text-xs font-medium max-w-sm text-left anim-child" data-anim="slide-left" data-anim-start="0.1" data-anim-end="0.6" data-i18n="pricing_subtitle">
+                    Pilih paket yang sesuai dengan volume trading dan kompleksitas strategi Anda. Tanpa potongan bagi hasil keuntungan.
+                </p>
+            </div>
+
+            <!-- Pricing Grid -->
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-6 items-stretch anim-child" data-anim="slide-up" data-anim-start="0.3" data-anim-end="0.9">
+                <!-- Lite Mode -->
+                <div class="rounded-md bg-white border border-slate-200 p-5 md:p-6 shadow-sm flex flex-col justify-between space-y-4 transition-all hover:shadow-md">
+                    <div class="space-y-3">
+                        <span class="text-[9px] font-black text-slate-500 uppercase tracking-widest block" data-i18n="pricing_lite_tagline">Untuk pemula & hobi</span>
+                        <h3 class="font-anton font-bold text-lg md:text-xl uppercase tracking-wider text-black" data-i18n="pricing_lite_title">Lite Mode</h3>
+                        <div class="flex items-baseline space-x-1">
+                            <span class="text-2xl font-bold font-mono text-black" data-i18n="pricing_lite_price">$9</span>
+                            <span class="text-slate-500 text-xs font-semibold">/mo</span>
+                        </div>
+                        <div class="border-t border-slate-100 pt-3 space-y-2 text-xs text-slate-600 font-medium">
+                            <div class="flex items-center space-x-2">
+                                <span data-i18n="pricing_lite_b1">✓ 2 Bot Trading Aktif</span>
+                            </div>
+                            <div class="flex items-center space-x-2">
+                                <span data-i18n="pricing_lite_b2">✓ Strategi DCA & Grid Standar</span>
+                            </div>
+                            <div class="flex items-center space-x-2">
+                                <span data-i18n="pricing_lite_b3">✓ Mendukung 120+ Bursa Kripto</span>
+                            </div>
+                        </div>
+                    </div>
+                    <button class="w-full py-2 rounded nm-button font-black text-[10px] uppercase tracking-wider text-slate-700 text-center border border-white/40" data-i18n="pricing_cta">
+                        Pilih Paket
+                    </button>
+                </div>
+
+                <!-- Pro Mode (Highlighted) -->
+                <div class="rounded-md bg-white border-2 border-[#0071e3] p-5 md:p-6 shadow-md flex flex-col justify-between space-y-4 relative transition-all hover:shadow-lg">
+                    <div class="absolute -top-3 left-1/2 -translate-x-1/2 bg-[#0071e3] text-white text-[8px] font-black px-3 py-1 rounded-full uppercase tracking-wider">
+                        RECOMMENDED
+                    </div>
+                    <div class="space-y-3">
+                        <span class="text-[9px] font-black text-[#0071e3] uppercase tracking-widest block" data-i18n="pricing_pro_tagline">Untuk trader aktif & profesional</span>
+                        <h3 class="font-anton font-bold text-lg md:text-xl uppercase tracking-wider text-black" data-i18n="pricing_pro_title">Pro Mode</h3>
+                        <div class="flex items-baseline space-x-1">
+                            <span class="text-2xl font-bold font-mono text-black" data-i18n="pricing_pro_price">$29</span>
+                            <span class="text-slate-500 text-xs font-semibold">/mo</span>
+                        </div>
+                        <div class="border-t border-slate-100 pt-3 space-y-2 text-xs text-slate-600 font-medium">
+                            <div class="flex items-center space-x-2">
+                                <span data-i18n="pricing_pro_b1">✓ Bot Trading Aktif Tanpa Batas</span>
+                            </div>
+                            <div class="flex items-center space-x-2">
+                                <span data-i18n="pricing_pro_b2">✓ Sinyal Indikator TA-Lib Lengkap</span>
+                            </div>
+                            <div class="flex items-center space-x-2">
+                                <span data-i18n="pricing_pro_b3">✓ Mode Bot Trailing & Combo</span>
+                            </div>
+                            <div class="flex items-center space-x-2">
+                                <span data-i18n="pricing_pro_b4">✓ Latensi Eksekusi &lt; 15ms</span>
+                            </div>
+                        </div>
+                    </div>
+                    <button class="w-full py-2 bg-[#0071e3] hover:bg-blue-600 text-white font-black text-[10px] uppercase tracking-wider text-center transition-all shadow-sm shadow-blue-500/20" data-i18n="pricing_cta">
+                        Pilih Paket
+                    </button>
+                </div>
+
+                <!-- White-Label B2B -->
+                <div class="rounded-md bg-white border border-slate-200 p-5 md:p-6 shadow-sm flex flex-col justify-between space-y-4 transition-all hover:shadow-md">
+                    <div class="space-y-3">
+                        <span class="text-[9px] font-black text-purple-600 uppercase tracking-widest block" data-i18n="pricing_wl_tagline">Untuk institusi & mitra B2B</span>
+                        <h3 class="font-anton font-bold text-lg md:text-xl uppercase tracking-wider text-black" data-i18n="pricing_wl_title">White-Label</h3>
+                        <div class="flex items-baseline space-x-1">
+                            <span class="text-2xl font-bold font-mono text-black" data-i18n="pricing_wl_price">Kustom</span>
+                        </div>
+                        <div class="border-t border-slate-100 pt-3 space-y-2 text-xs text-slate-600 font-medium">
+                            <div class="flex items-center space-x-2">
+                                <span data-i18n="pricing_wl_b1">✓ Integrasi Merek Sendiri (Branded)</span>
+                            </div>
+                            <div class="flex items-center space-x-2">
+                                <span data-i18n="pricing_wl_b2">✓ Arsitektur Server Khusus</span>
+                            </div>
+                            <div class="flex items-center space-x-2">
+                                <span data-i18n="pricing_wl_b3">✓ Dashboard Admin & Analitik</span>
+                            </div>
+                            <div class="flex items-center space-x-2">
+                                <span data-i18n="pricing_wl_b4">✓ Pemeliharaan Teknis 24/7</span>
+                            </div>
+                        </div>
+                    </div>
+                    <button class="w-full py-2 rounded border border-purple-200 bg-purple-50 hover:bg-purple-100 text-purple-700 font-black text-[10px] uppercase tracking-wider text-center transition-all" data-i18n="pricing_cta_wl">
+                        Hubungi Penjualan B2B
+                    </button>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- 8. Security & Practice (Flat white card containers with global header) -->
+    <section id="security" class="w-full px-6 md:px-12 lg:px-20 py-20 min-h-screen flex items-center mb-20 md:mb-0 bg-white">
+        <div class="max-w-6xl mx-auto space-y-12">
+            <div class="flex flex-col md:flex-row md:items-end gap-6 justify-between">
+                <div class="space-y-3 text-left anim-child" data-anim="slide-left" data-anim-start="0.0" data-anim-end="0.5">
+                    <span class="text-[10px] font-black text-[#0071e3] uppercase tracking-widest block"
+                        data-i18n="security_section_tagline">SAFETY & COMPLIANCE</span>
+                    <h2 class="font-anton font-bold text-3xl md:text-5xl uppercase tracking-wider text-black"
+                        data-i18n="security_section_title">
+                        Bank-Grade Security for Your Digital Assets
+                    </h2>
+                </div>
+                <p class="text-slate-600 text-xs font-medium max-w-sm text-left anim-child" data-anim="slide-left" data-anim-start="0.1" data-anim-end="0.6" data-i18n="security_section_desc">
+                    Your security is our absolute priority. We employ advanced encryption protocols and zero-fund
+                    storage standards to ensure that your API connections and funds remain 100% secure.
+                </p>
+            </div>
+
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-8 anim-child" data-anim="slide-up" data-anim-start="0.3" data-anim-end="0.9">
+                <div
+                    class="rounded-md p-6 bg-white border border-slate-200 shadow-sm space-y-4 flex flex-col justify-between">
+                    <div class="space-y-3">
+                        <span class="text-[9px] font-black text-indigo-600 uppercase tracking-widest block"
+                            data-i18n="security_tagline">100% RISK-FREE ENVIRONMENT</span>
+                        <h3 class="font-anton font-bold text-xl md:text-2xl uppercase tracking-wider text-black"
+                            data-i18n="security_demo_title">Demo Practice Mode</h3>
+                        <p class="text-xs text-slate-600 leading-relaxed font-medium" data-i18n="security_demo_desc">
+                            Test strategies under real-market conditions without putting your actual money at risk.
+                            Practice deploying bot configurations and adjusting risk parameters using virtual test
+                            funds.
+                        </p>
+                    </div>
+                    <button onclick="window.location.href='/dashboard'"
+                        class="py-2 px-6 rounded nm-button font-black text-[10px] uppercase tracking-wider text-slate-700 text-center block max-w-max border border-white/40"
+                        data-i18n="security_demo_cta">
+                        Start Demo Practice
+                    </button>
+                </div>
+
+                <div
+                    class="rounded-md p-6 bg-white border border-slate-200 shadow-sm space-y-4 flex flex-col justify-between">
+                    <div class="space-y-3">
+                        <span class="text-[9px] font-black text-rose-500 uppercase tracking-widest block"
+                            data-i18n="security_shield_tagline">BANK-GRADE ENCRYPTION SECURITY</span>
+                        <h3 class="font-anton font-bold text-xl md:text-2xl uppercase tracking-wider text-black"
+                            data-i18n="security_shield_title">API Protection Shield</h3>
+                        <p class="text-xs text-slate-600 leading-relaxed font-medium" data-i18n="security_shield_desc">
+                            TradingSafe connects to your exchange using securely encrypted API credentials. Your funds
+                            are never stored on our platform, and we require ZERO withdrawal permissions. Your assets
+                            remain secure.
+                        </p>
+                    </div>
+                    <div class="inline-flex items-center gap-2 text-xs font-bold text-slate-700">
+                        <span class="text-green-500" data-i18n="security_shield_b1">✔ AES-256 Key Encryption</span>
+                        &nbsp;&bull;&nbsp; <span class="text-green-500" data-i18n="security_shield_b2">✔ Zero Fund
+                            Storage</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- 8b. Legal & Regulatory Compliance (Light blue background, corporate trust grid) -->
+    <section id="compliance" class="w-full px-6 md:px-12 lg:px-20 py-20 min-h-screen flex items-center mb-24 md:mb-0 bg-[#e6effb]">
+        <div class="max-w-6xl mx-auto space-y-12">
+            <!-- Header -->
+            <div class="flex flex-col md:flex-row md:items-end gap-6 justify-between border-b border-slate-200 pb-8">
+                <div class="space-y-3 text-left anim-child" data-anim="slide-right" data-anim-start="0.0" data-anim-end="0.5">
+                    <span class="text-[10px] font-black text-[#0071e3] uppercase tracking-widest block"
+                        data-i18n="compliance_tagline">KEPATUHAN HUKUM & REGULASI</span>
+                    <h2 class="font-anton font-bold text-3xl md:text-5xl uppercase tracking-wider text-black leading-tight"
+                        data-i18n="compliance_title">
+                        Standar Ketat. Ketenangan Pikiran Sepenuhnya.
+                    </h2>
+                </div>
+                <p class="text-slate-600 text-xs font-medium max-w-sm text-left anim-child" data-anim="slide-right" data-anim-start="0.1" data-anim-end="0.6" data-i18n="compliance_subtitle">
+                    TradingSafe dirancang untuk mematuhi batasan regulasi global, menyediakan alat non-kustodian tanpa liabilitas broker.
+                </p>
+            </div>
+
+            <!-- Compliance cards -->
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-8 anim-child" data-anim="slide-up" data-anim-start="0.3" data-anim-end="0.9">
+                <!-- SaaS classification -->
+                <div class="rounded-md p-6 bg-white border border-slate-200 shadow-sm space-y-3">
+                    <div class="w-8 h-8 rounded bg-blue-50 flex items-center justify-center text-[#0071e3]">
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" />
+                        </svg>
+                    </div>
+                    <h3 class="font-anton font-bold text-lg uppercase tracking-wider text-black" data-i18n="compliance_card1_title">Penyedia Layanan Teknologi</h3>
+                    <p class="text-xs text-slate-600 leading-relaxed font-medium" data-i18n="compliance_card1_desc">
+                        Kami diklasifikasikan berdasarkan hukum internasional sebagai penyedia teknologi SaaS, bukan perantara keuangan. Kami tidak mengelola modal.
+                    </p>
+                </div>
+
+                <!-- Non-Custodial shield -->
+                <div class="rounded-md p-6 bg-white border border-slate-200 shadow-sm space-y-3">
+                    <div class="w-8 h-8 rounded bg-green-50 flex items-center justify-center text-green-600">
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" />
+                        </svg>
+                    </div>
+                    <h3 class="font-anton font-bold text-lg uppercase tracking-wider text-black" data-i18n="compliance_card2_title">Perisai Hukum Non-Kustodian</h3>
+                    <p class="text-xs text-slate-600 leading-relaxed font-medium" data-i18n="compliance_card2_desc">
+                        Sesuai dengan panduan MiCA Uni Eropa & SEC AS, semua aset tetap berada di bursa Anda sendiri. Kami tidak menyimpan dana pengguna.
+                    </p>
+                </div>
+
+                <!-- GDPR Standards -->
+                <div class="rounded-md p-6 bg-white border border-slate-200 shadow-sm space-y-3">
+                    <div class="w-8 h-8 rounded bg-purple-50 flex items-center justify-center text-purple-600">
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
+                        </svg>
+                    </div>
+                    <h3 class="font-anton font-bold text-lg uppercase tracking-wider text-black" data-i18n="compliance_card3_title">Enkripsi Data Standar GDPR</h3>
+                    <p class="text-xs text-slate-600 leading-relaxed font-medium" data-i18n="compliance_card3_desc">
+                        Kami menerapkan standar GDPR Uni Eropa untuk keamanan data. API Key dan strategi Anda dienkripsi dengan standar bank AES-256.
+                    </p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- 8c. Community & Growth Section (Light blue background, fullwidth container) -->
+    <section id="community" class="w-full px-6 md:px-12 lg:px-20 py-20 min-h-screen flex items-center mb-20 md:mb-0 bg-[#e6effb]">
+        <div class="max-w-6xl mx-auto w-full">
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-12 items-center text-slate-800">
+                <!-- Left Side: Community Pitch & Stats -->
+                <div class="space-y-6 anim-child" data-anim="slide-left" data-anim-start="0.0" data-anim-end="0.6">
+                    <span class="text-[10px] font-black text-[#0071e3] uppercase tracking-widest block"
+                        data-i18n="community_tagline">UTAMAKAN KOMUNITAS</span>
+                    <h2 class="font-anton font-bold text-3xl md:text-5xl uppercase tracking-wider text-black leading-tight"
+                        data-i18n="community_title">
+                        Bergabung dengan Komunitas Elite TradingSafe
+                    </h2>
+                    <p class="text-xs text-slate-600 font-medium leading-relaxed" data-i18n="community_subtitle">
+                        Terhubung dengan ribuan trader otomatis. Bagikan performa, dapatkan keuntungan early bird, dan terima sinyal pasar real-time.
+                    </p>
+
+                    <div class="grid grid-cols-2 gap-4 pt-4 border-t border-slate-300">
+                        <div class="space-y-1">
+                            <span class="text-2xl font-bold font-mono text-[#0071e3]" data-i18n="community_stat1_val">12Ribu+</span>
+                            <p class="text-[8px] font-black uppercase text-slate-500 tracking-wider" data-i18n="community_stat1_lbl">Anggota Global</p>
+                        </div>
+                        <div class="space-y-1">
+                            <span class="text-2xl font-bold font-mono text-[#0071e3]" data-i18n="community_stat2_val">24/7</span>
+                            <p class="text-[8px] font-black uppercase text-slate-500 tracking-wider" data-i18n="community_stat2_lbl">Analisis Pasar Live</p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Right Side: Social links & Early Bird benefits -->
+                <div class="space-y-6 anim-child" data-anim="slide-right" data-anim-start="0.3" data-anim-end="0.9">
+                    <div class="space-y-4">
+                        <!-- Benefit 1 -->
+                        <div class="flex items-start space-x-3 p-4 rounded bg-white border border-slate-200 shadow-sm">
+                            <div class="mt-0.5 text-blue-500">
+                                <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 24 24"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 15h-2v-6h2v6zm0-8h-2V7h2v2z"/></svg>
+                            </div>
+                            <div class="space-y-1">
+                                <h4 class="text-xs font-bold uppercase text-black" data-i18n="community_b1_title">Hadiah Beta Early Bird</h4>
+                                <p class="text-[10px] text-slate-600 font-medium" data-i18n="community_b1_desc">Berkontribusi dalam pengujian platform dan dapatkan upgrade gratis ke langganan Pro.</p>
+                            </div>
+                        </div>
+
+                        <!-- Benefit 2 -->
+                        <div class="flex items-start space-x-3 p-4 rounded bg-white border border-slate-200 shadow-sm">
+                            <div class="mt-0.5 text-green-500">
+                                <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 24 24"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-1 15l-5-5 1.41-1.41L11 14.17l7.59-7.59L20 8l-9 9z"/></svg>
+                            </div>
+                            <div class="space-y-1">
+                                <h4 class="text-xs font-bold uppercase text-black" data-i18n="community_b2_title">Sinyal Bot Langsung ke Saluran</h4>
+                                <p class="text-[10px] text-slate-600 font-medium" data-i18n="community_b2_desc">Dapatkan sinyal kuantitatif otomatis langsung ke dalam feed grup eksklusif kami.</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Minimalist Link -->
+                    <div class="pt-2">
+                        <a href="https://t.me/+evHmTWM1-sg0Mjc9" target="_blank" class="text-[#0071e3] hover:text-[#005bb5] font-black text-xs uppercase tracking-wider inline-flex items-center gap-1.5 transition-colors">
+                            <span data-i18n="community_cta">Gabung dengan Komunitas</span> <span class="text-sm">➔</span>
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- 9. Footer Section -->
+    <!-- 9. Footer Section -->
+    <footer id="about" class="w-full bg-[#09090b] text-slate-400 flex flex-col relative z-10">
+        <!-- Main Footer Content -->
+        <div class="w-full px-6 md:px-12 lg:px-20 pt-20">
+            <div class="max-w-6xl mx-auto grid grid-cols-1 sm:grid-cols-2 md:grid-cols-5 gap-10">
+                <!-- Brand & Address -->
+                <div class="space-y-4 md:col-span-1">
+                    <div class="flex items-center gap-2 text-white">
+                        <span class="font-sans font-extrabold tracking-wider text-base uppercase text-white">TRADINGSAFE</span>
+                    </div>
+                    <p class="text-[10px] text-slate-500 leading-relaxed uppercase tracking-wider" data-i18n="footer_tagline">
+                        Secure multi-exchange platform for automated crypto trading, advanced order types, and real-time portfolio tracking.
+                    </p>
+                    <p class="text-[9px] text-slate-500 leading-relaxed uppercase tracking-wider font-semibold">
+                        Menara TradingSafe Lantai 21, Jl. Jend. Sudirman Kav. 50, Karet Semanggi, Jakarta Selatan, 12930, Indonesia
+                    </p>
+                    <!-- Socials -->
+                    <div class="flex items-center gap-3 pt-2">
+                        <a href="https://t.me/+evHmTWM1-sg0Mjc9" target="_blank"
+                            class="w-7 h-7 rounded-full bg-slate-800/60 hover:bg-slate-700 text-white flex items-center justify-center transition-all"
+                            aria-label="Telegram">
+                            <svg class="w-4 h-4 fill-current" viewBox="0 0 24 24">
+                                <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm4.64 6.8c-.15 1.58-.8 5.42-1.13 7.19-.14.75-.42 1-.68 1.03-.58.05-1.02-.38-1.58-.75-.88-.58-1.38-.94-2.23-1.5-.99-.65-.35-1.01.22-1.59.15-.15 2.71-2.48 2.76-2.69.01-.03.01-.14-.07-.2-.08-.06-.19-.04-.27-.02-.11.02-1.93 1.23-5.46 3.62-.51.35-.98.53-1.39.51-.46-.01-1.35-.26-2.01-.48-.81-.27-1.46-.42-1.4-.88.03-.24.37-.49 1.02-.75 3.99-1.74 6.66-2.88 7.99-3.43 3.8-1.57 4.59-1.85 5.1-.16.02.08.03.18.02.27z"/>
+                            </svg>
+                        </a>
+                        <a href="#"
+                            class="w-7 h-7 rounded-full bg-slate-800/60 hover:bg-slate-700 text-white flex items-center justify-center transition-all"
+                            aria-label="Twitter">
+                            <svg class="w-4 h-4 fill-current" viewBox="0 0 24 24">
+                                <path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z" />
+                            </svg>
+                        </a>
+                        <a href="#"
+                            class="w-7 h-7 rounded-full bg-slate-800/60 hover:bg-slate-700 text-white flex items-center justify-center transition-all"
+                            aria-label="Instagram">
+                            <svg class="w-4 h-4 fill-none stroke-current" stroke-width="2" stroke-linecap="round"
+                                stroke-linejoin="round" viewBox="0 0 24 24">
+                                <rect x="2" y="2" width="20" height="20" rx="5" ry="5"></rect>
+                                <path d="M16 11.37A4 4 0 1 1 12.63 8 4 4 0 0 1 16 11.37z"></path>
+                                <line x1="17.5" y1="6.5" x2="17.51" y2="6.5"></line>
+                            </svg>
+                        </a>
+                    </div>
+                    <!-- Minimalist Telegram Community Link -->
+                    <div class="pt-3">
+                        <a href="https://t.me/+evHmTWM1-sg0Mjc9" target="_blank" class="text-[#0071e3] hover:text-[#005bb5] font-black text-[10px] uppercase tracking-wider inline-flex items-center gap-1.5 transition-colors">
+                            <span data-i18n="community_cta">Gabung dengan Komunitas</span> <span class="text-xs">➔</span>
+                        </a>
+                    </div>
+                </div>
+
+                <!-- Column 2 (Platform) -->
+                <div class="space-y-4">
+                    <h4 class="text-white text-xs font-black uppercase tracking-widest" data-i18n="nav_platform">Platform</h4>
+                    <ul class="space-y-2 text-xs uppercase tracking-wider font-semibold">
+                        <li><a href="#simulator" class="hover:text-white transition-colors" data-i18n="nav_simulator">Simulator</a></li>
+                        <li><a href="#exchanges" class="hover:text-white transition-colors" data-i18n="nav_exchanges">Exchanges</a></li>
+                        <li><a href="#bots" class="hover:text-white transition-colors" data-i18n="nav_bots">Bots</a></li>
+                        <li><a href="#pricing" class="hover:text-white transition-colors" data-i18n="nav_pricing">Pricing</a></li>
+                    </ul>
+                </div>
+
+                <!-- Column 3 (Trust & Safety) -->
+                <div class="space-y-4">
+                    <h4 class="text-white text-xs font-black uppercase tracking-widest" data-i18n="nav_trust">Trust & Safety</h4>
+                    <ul class="space-y-2 text-xs uppercase tracking-wider font-semibold">
+                        <li><a href="#security" class="hover:text-white transition-colors" data-i18n="nav_security">Security</a></li>
+                        <li><a href="#compliance" class="hover:text-white transition-colors" data-i18n="nav_compliance">Compliance</a></li>
+                        <li><a href="#regions" class="hover:text-white transition-colors" data-i18n="nav_regions">Regions</a></li>
+                    </ul>
+                </div>
+
+                <!-- Column 4 (Company) -->
+                <div class="space-y-4">
+                    <h4 class="text-white text-xs font-black uppercase tracking-widest" data-i18n="nav_company">Company</h4>
+                    <ul class="space-y-2 text-xs uppercase tracking-wider font-semibold">
+                        <li><a href="#about" class="hover:text-white transition-colors" data-i18n="nav_about">About</a></li>
+                        <li><a href="#community" class="hover:text-white transition-colors" data-i18n="nav_community">Community</a></li>
+                        <li><a href="#" class="hover:text-white transition-colors" data-i18n="footer_support">Contact Support</a></li>
+                    </ul>
+                </div>
+
+                <!-- Column 5 (Stay Updated) -->
+                <div class="space-y-4">
+                    <h4 class="text-white text-xs font-black uppercase tracking-widest" data-i18n="footer_stay">Stay Updated</h4>
+                    <p class="text-xs text-slate-500 uppercase tracking-wider leading-relaxed" data-i18n="footer_subscribe">
+                        Subscribe to receive bot performance updates and newly integrated exchanges.
+                    </p>
+                    <div class="flex gap-2">
+                        <input type="email" placeholder="YOUR EMAIL"
+                            class="flex-1 bg-slate-900 border border-slate-800 rounded-md px-3 py-2 text-xs text-white uppercase tracking-wider outline-none focus:border-slate-700 transition-colors" />
+                        <button class="bg-[#F1BF0A] text-black hover:bg-[#d8ab09] px-4 py-2 rounded-md text-xs font-bold uppercase tracking-wider transition-colors" data-i18n="footer_join">
+                            JOIN
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Full-Width Horizontal Border Line -->
+        <div class="w-full border-t border-slate-900 mt-16"></div>
+
+        <!-- Copyright & Legal -->
+        <div class="w-full px-6 md:px-12 lg:px-20 pb-12 pt-8">
+            <div class="max-w-6xl mx-auto flex flex-col md:flex-row justify-between items-center gap-4 text-[10px] font-bold uppercase tracking-wider text-slate-600">
+                <div data-i18n="footer_rights">
+                    © 2026 TRADINGSAFE. ALL RIGHTS RESERVED.
+                </div>
+                <div class="flex gap-6">
+                    <a href="#" class="hover:text-slate-400 transition-colors" data-i18n="footer_privacy">Privacy Policy</a>
+                    <a href="#" class="hover:text-slate-400 transition-colors" data-i18n="footer_terms">Terms of Service</a>
+                    <a href="#" class="hover:text-slate-400 transition-colors" data-i18n="footer_support">Contact Support</a>
+                </div>
+            </div>
+        </div>
+    </footer>
+
+    <!-- Floating Back to Top Button -->
+    <button id="back-to-top" class="fixed bottom-6 right-6 w-10 h-10 rounded-full bg-[#0071e3] hover:bg-blue-600 text-white flex items-center justify-center shadow-lg transition-all opacity-0 pointer-events-none z-[999]" aria-label="Back to top">
+        <svg class="w-5 h-5 fill-current" viewBox="0 0 24 24">
+            <path d="M7.41 15.41L12 10.83l4.59 4.58L18 14l-6-6-6 6z"/>
+        </svg>
+    </button>
+
+    <!-- 10. Core Logic Script (type="module") -->
+    <script type="module" src="landing.js?v=1.1"></script>
+</body>
+
+</html>

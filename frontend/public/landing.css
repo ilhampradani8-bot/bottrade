@@ -1,0 +1,103 @@
+/* Custom styles for Mugsy's Mugs Landing Page */
+
+/* Apple-style typography enhancements */
+@import url('https://fonts.googleapis.com/css2?family=Nunito:wght@300;400;600;700;800;900&display=swap');
+
+body {
+    font-family: 'Nunito', sans-serif;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+}
+
+/* Custom neoclassic styling overrides */
+.font-anton {
+    font-family: 'Nunito', sans-serif;
+}
+
+/* Custom interactive animation for buttons */
+button:active {
+    transform: scale(0.98);
+    transition: transform 0.1s ease;
+}
+
+/* Custom scrollbar */
+::-webkit-scrollbar {
+    width: 8px;
+}
+::-webkit-scrollbar-track {
+    background: #f1f1f1;
+}
+::-webkit-scrollbar-thumb {
+    background: #888;
+    border-radius: 4px;
+}
+::-webkit-scrollbar-thumb:hover {
+    background: #555;
+}
+
+/* Neumorphic UI Design Tokens and Utilities */
+:root {
+  --nm-bg: #e6effb;
+  --nm-shadow-dark: #b5c3d6;
+  --nm-shadow-light: #ffffff;
+}
+
+.bg-nm {
+  background-color: var(--nm-bg);
+}
+
+.nm-flat {
+  background: var(--nm-bg);
+  box-shadow: 6px 6px 12px var(--nm-shadow-dark), -6px -6px 12px var(--nm-shadow-light);
+}
+
+.nm-inset {
+  background: var(--nm-bg);
+  box-shadow: inset 4px 4px 8px var(--nm-shadow-dark), inset -4px -4px 8px var(--nm-shadow-light);
+}
+
+.nm-button {
+  background: var(--nm-bg);
+  box-shadow: 4px 4px 8px var(--nm-shadow-dark), -4px -4px 8px var(--nm-shadow-light);
+  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.nm-button:hover {
+  box-shadow: 2px 2px 4px var(--nm-shadow-dark), -2px -2px 4px var(--nm-shadow-light);
+  transform: translateY(1px);
+}
+
+.nm-button:active {
+  box-shadow: inset 3px 3px 6px var(--nm-shadow-dark), inset -3px -3px 6px var(--nm-shadow-light);
+  transform: translateY(2px);
+}
+
+/* Infinite Marquee Ticker */
+@keyframes marquee {
+  0% { transform: translateX(0); }
+  100% { transform: translateX(-50%); }
+}
+.animate-marquee {
+  display: flex;
+  width: max-content;
+  animation: marquee 30s linear infinite;
+}
+.animate-marquee:hover {
+  animation-play-state: paused;
+}
+
+/* Infinite Marquee Reverse Ticker */
+@keyframes marquee-reverse {
+  0% { transform: translateX(-50%); }
+  100% { transform: translateX(0); }
+}
+.animate-marquee-reverse {
+  display: flex;
+  width: max-content;
+  animation: marquee-reverse 30s linear infinite;
+}
+.animate-marquee-reverse:hover {
+  animation-play-state: paused;
+}
+
+

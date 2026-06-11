@@ -4,15 +4,14 @@ use sqlx::PgPool;
 use std::collections::HashMap;
 use tokio::task::JoinHandle;
 
-use crate::bot24jam;
+use crate::realtime_sim::bot_worker;
 
-// Struktur untuk memantau worker yang sedang berjalan
-pub struct Engine {
+pub struct SimEngine {
     pool: PgPool,
-    active_workers: HashMap<i32, JoinHandle<()>>, // Map ID Bot ke Task yang sedang jalan
+    active_workers: HashMap<i32, JoinHandle<()>>,
 }
 
-impl Engine {
+impl SimEngine {
     pub fn new(pool: PgPool) -> Self {
         Self {
             pool,
@@ -21,28 +20,36 @@ impl Engine {
     }
 
     pub async fn run(&mut self) -> Result<(), Box<dyn Error>> {
-        println!("🚀 Engine24am Orchestrator Started.");
+        println!("🚀 SimEngine (Simulation Orchestrator) Started.");
         
         loop {
-            // 1. Baca tabel strategi yang statusnya 'active'
+            // 1. Baca tabel simulations yang statusnya 'active'
             let active_bots = sqlx::query!(
-                "SELECT id, name, pair, bot_type FROM strategies_by_strategysettings WHERE status = 'active'"
+                "SELECT id, name, pair, bot_type FROM simulations_by_simsettings WHERE status = 'active'"
             )
             .fetch_all(&self.pool)
-            .await?;
+            .await;
+
+            let active_bots = match active_bots {
+                Ok(b) => b,
+                Err(e) => {
+                    eprintln!("❌ Database Error in SimEngine: {}", e);
+                    sleep(Duration::from_secs(10)).await;
+                    continue;
+                }
+            };
 
             // 2. Cek bot mana yang harus dijalankan
             for bot in &active_bots {
                 if !self.active_workers.contains_key(&bot.id) {
-                    println!("✨ Spawning new worker for Bot: {} ({})", bot.name, bot.pair);
+                    println!("✨ Spawning new worker for Simulation Bot: {} ({})", bot.name, bot.pair);
                     
                     let pool_clone = self.pool.clone();
                     let bot_id = bot.id;
                     
-                    // Spawn worker task (bot24jam logic)
                     let handle = tokio::spawn(async move {
-                        if let Err(e) = bot24jam::run_bot_worker(pool_clone, bot_id).await {
-                            eprintln!("❌ Worker Error [Bot ID {}]: {}", bot_id, e);
+                        if let Err(e) = bot_worker::run_sim_worker(pool_clone, bot_id).await {
+                            eprintln!("❌ Sim Worker Error [Bot ID {}]: {}", bot_id, e);
                         }
                     });
 
@@ -60,12 +67,12 @@ impl Engine {
 
             for id in bots_to_stop {
                 if let Some(handle) = self.active_workers.remove(&id) {
-                    println!("🛑 Stopping worker for Bot ID: {}", id);
+                    println!("🛑 Stopping worker for Simulation Bot ID: {}", id);
                     handle.abort();
                 }
             }
 
-            sleep(Duration::from_secs(10)).await; // Re-sync setiap 10 detik
+            sleep(Duration::from_secs(10)).await;
         }
     }
 }

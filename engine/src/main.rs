@@ -1,6 +1,7 @@
 mod Engine24am;
 mod bot24jam;
 mod notifications;
+pub mod realtime_sim;
 
 use sqlx::postgres::PgPoolOptions;
 use dotenvy::dotenv;
@@ -23,7 +24,16 @@ async fn main() -> Result<(), Box<dyn Error>> {
     // Tampilkan QR Login WhatsApp di awal
     notifications::whatsapp::generate_qr_login();
 
-    // 2. Buat dan Jalankan Engine Orchestrator
+    // 2. Buat dan Jalankan Simulation Engine
+    let pool_sim = pool.clone();
+    tokio::spawn(async move {
+        let mut sim_engine = realtime_sim::engine::SimEngine::new(pool_sim);
+        if let Err(e) = sim_engine.run().await {
+            eprintln!("❌ SimEngine Error: {}", e);
+        }
+    });
+
+    // 3. Buat dan Jalankan Engine Orchestrator Utama
     let mut engine = Engine24am::Engine::new(pool);
     
     // Jalankan mesin utama

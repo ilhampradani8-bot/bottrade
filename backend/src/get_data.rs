@@ -74,7 +74,7 @@ pub async fn save_klines_to_db(pool: &PgPool, symbol: &str, interval: &str, klin
     let mut count = 0;
     for k in klines {
         let result = sqlx::query(
-            "INSERT INTO market_data (symbol, interval, open_time, open, high, low, close, volume) \
+            "INSERT INTO market_data_by_backtest (symbol, interval, open_time, open, high, low, close, volume) \
              VALUES ($1, $2, $3, $4, $5, $6, $7, $8) \
              ON CONFLICT (symbol, interval, open_time) DO NOTHING"
         )

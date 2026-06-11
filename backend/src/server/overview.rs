@@ -56,7 +56,7 @@ pub async fn get_overview(
         SELECT 
             COUNT(*) FILTER (WHERE status = 'active') as active_count,
             COUNT(*) FILTER (WHERE status != 'active') as inactive_count
-        FROM strategies 
+        FROM strategies_by_strategysettings 
         WHERE user_id = $1
         "#,
         user_id
@@ -67,7 +67,7 @@ pub async fn get_overview(
 
     // 2. Get total capital (sum nominal from settings)
     let strategies = sqlx::query!(
-        "SELECT settings FROM strategies WHERE user_id = $1",
+        "SELECT settings FROM strategies_by_strategysettings WHERE user_id = $1",
         user_id
     )
     .fetch_all(&state.pool)
@@ -85,7 +85,7 @@ pub async fn get_overview(
 
     // 3. Get connected accounts
     let accounts = sqlx::query!(
-        "SELECT platform_name, label FROM api_keys WHERE user_id = $1",
+        "SELECT platform_name, label FROM api_keys_by_credential WHERE user_id = $1",
         user_id
     )
     .fetch_all(&state.pool)
@@ -101,7 +101,7 @@ pub async fn get_overview(
 
     // 4. Get performance history
     let performance = sqlx::query!(
-        "SELECT total_balance, logged_at FROM performance_logs WHERE user_id = $1 ORDER BY logged_at ASC LIMIT 30",
+        "SELECT total_balance, logged_at FROM performance_logs_by_overview WHERE user_id = $1 ORDER BY logged_at ASC LIMIT 30",
         user_id
     )
     .fetch_all(&state.pool)

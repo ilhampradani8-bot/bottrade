@@ -3,6 +3,12 @@
 import React, { useState, useEffect } from 'react';
 import { createPortal } from 'react-dom';
 
+declare global {
+  interface Window {
+    google: any;
+  }
+}
+
 export default function AuthModal({ isOpen, onClose, initialMode = 'login' }: any) {
   const [mode, setMode] = useState(initialMode);
   const [formData, setFormData] = useState({
@@ -24,6 +30,75 @@ export default function AuthModal({ isOpen, onClose, initialMode = 'login' }: an
       setMessage({ type: '', text: '' });
     }
   }, [initialMode, isOpen]);
+
+  const initGoogleSignIn = () => {
+    if (typeof window !== 'undefined' && window.google) {
+      window.google.accounts.id.initialize({
+        client_id: '812430784237-70vet0sepo0f0eti0cs62nnjd4s89ia8.apps.googleusercontent.com',
+        callback: handleGoogleCredentialResponse,
+      });
+
+      const containerEl = document.getElementById('google-btn-container');
+      if (containerEl) {
+        window.google.accounts.id.renderButton(containerEl, {
+          theme: 'dark',
+          size: 'large',
+          width: containerEl.clientWidth || 320,
+          text: 'signin_with',
+          shape: 'rectangular',
+        });
+      }
+    }
+  };
+
+  const handleGoogleCredentialResponse = async (response: any) => {
+    setLoading(true);
+    setMessage({ type: '', text: '' });
+    try {
+      const apiHost = window.location.hostname;
+      const res = await fetch(`http://${apiHost}:8080/api/auth/google`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ credential: response.credential })
+      });
+      const data = await res.json();
+      if (res.ok) {
+        setMessage({ type: 'success', text: 'Login Google Berhasil!' });
+        if (data.token) {
+          localStorage.setItem('token', data.token);
+          setTimeout(() => window.location.reload(), 1000);
+        }
+      } else {
+        setMessage({ type: 'error', text: data.message || 'Login Google Gagal' });
+      }
+    } catch (err) {
+      setMessage({ type: 'error', text: 'Gagal terhubung ke server' });
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    if (!isOpen) return;
+
+    const loadAndInit = () => {
+      if (!document.getElementById('google-gsi-client')) {
+        const script = document.createElement('script');
+        script.src = 'https://accounts.google.com/gsi/client';
+        script.id = 'google-gsi-client';
+        script.async = true;
+        script.defer = true;
+        script.onload = () => {
+          setTimeout(initGoogleSignIn, 150);
+        };
+        document.body.appendChild(script);
+      } else {
+        setTimeout(initGoogleSignIn, 150);
+      }
+    };
+
+    loadAndInit();
+  }, [isOpen, mode]);
 
   if (!isOpen || !mounted) return null;
 
@@ -82,8 +157,8 @@ export default function AuthModal({ isOpen, onClose, initialMode = 'login' }: an
               </h2>
            </div>
            <button 
-             onClick={onClose} 
-             className="text-[10px] font-black uppercase tracking-widest text-[#86868b] hover:text-white transition-all py-1 px-3 border border-white/5 bg-[#0a0c14] shadow-[-2px_-2px_6px_rgba(255,255,255,0.01),2px_2px_6px_rgba(0,0,0,0.4)] rounded-lg active:shadow-[inset_-1px_-1px_2px_rgba(255,255,255,0.01),inset_1px_1px_2px_rgba(0,0,0,0.4)]"
+              onClick={onClose} 
+              className="text-[10px] font-black uppercase tracking-widest text-[#86868b] hover:text-white transition-all py-1 px-3 border border-white/5 bg-[#0a0c14] shadow-[-2px_-2px_6px_rgba(255,255,255,0.01),2px_2px_6px_rgba(0,0,0,0.4)] rounded-lg active:shadow-[inset_-1px_-1px_2px_rgba(255,255,255,0.01),inset_1px_1px_2px_rgba(0,0,0,0.4)]"
            >
               TUTUP
            </button>
@@ -148,6 +223,19 @@ export default function AuthModal({ isOpen, onClose, initialMode = 'login' }: an
                  )}
               </button>
            </form>
+
+           {mode === 'login' && (
+              <div className="space-y-4 pt-3">
+                 <div className="flex items-center gap-2">
+                    <div className="flex-1 h-[1px] bg-white/5"></div>
+                    <span className="text-[8px] font-black uppercase tracking-widest text-slate-500">ATAU</span>
+                    <div className="flex-1 h-[1px] bg-white/5"></div>
+                 </div>
+                 <div className="w-full flex justify-center h-[40px] overflow-hidden rounded-xl bg-white/[0.02] border border-white/5 p-0.5">
+                    <div id="google-btn-container" className="w-full"></div>
+                 </div>
+              </div>
+           )}
 
            {/* Footer / Switch Mode */}
            <div className="pt-4 border-t border-white/5 text-center">

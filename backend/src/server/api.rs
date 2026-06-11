@@ -2,8 +2,9 @@ use once_cell::sync::Lazy;
 static DB_POOL: Lazy<std::sync::RwLock<Option<sqlx::PgPool>>> = Lazy::new(|| std::sync::RwLock::new(None));
 
 use axum::{
-    routing::{get, post},
+    routing::{get, post, delete},
     Json, Router, extract::State,
+    http::StatusCode,
 };
 use serde::{Deserialize, Serialize};
 use std::net::SocketAddr;
@@ -155,10 +156,19 @@ pub async fn start() {
         .route("/api/backtest", post(run_backtest))
         .route("/api/auth/register", post(postgres_auth_hub::register))
         .route("/api/auth/login", post(postgres_auth_hub::login))
+        .route("/api/auth/google", post(postgres_auth_hub::google_login))
         .route("/api/auth/me", get(postgres_auth_hub::get_me))
         .route("/api/api-keys", get(server_strategies::get_api_keys))
         .route("/api/api-keys", post(server_strategies::save_api_key))
         .route("/api/strategies/save", post(server_strategies::save_strategy))
+        .route("/api/strategies/user", get(server_strategies::get_user_strategies))
+        .route("/api/strategies/:id/status", post(server_strategies::toggle_strategy_status))
+        .route("/api/strategies/:id", delete(server_strategies::delete_strategy))
+        .route("/api/simulations/save", post(crate::realtime_sim::routes::save_simulation))
+        .route("/api/simulations/user", get(crate::realtime_sim::routes::get_user_simulations))
+        .route("/api/simulations/:id/status", post(crate::realtime_sim::routes::toggle_simulation_status))
+        .route("/api/simulations/:id", delete(crate::realtime_sim::routes::delete_simulation))
+        .route("/api/simulations/trades", get(crate::realtime_sim::routes::get_simulation_trades))
         .route("/api/overview", get(crate::server::overview::get_overview))
         .route("/api/trade/execute", post(execute_trade))
         .route("/api/exchanges/ccxt", get(get_ccxt_exchanges))
@@ -204,7 +214,7 @@ async fn get_strategies() -> Json<Vec<Strategy>> {
 
 async fn get_available_data(State(state): State<AppState>) -> Json<Vec<AvailableData>> {
     let rows = sqlx::query!(
-        "SELECT symbol, interval, MIN(open_time) as min_time, MAX(open_time) as max_time FROM market_data GROUP BY symbol, interval"
+        "SELECT symbol, interval, MIN(open_time) as min_time, MAX(open_time) as max_time FROM market_data_by_backtest GROUP BY symbol, interval"
     )
     .fetch_all(&state.pool)
     .await
@@ -256,7 +266,7 @@ async fn run_backtest(
     // Fetch data with optional time range and interval
     let query = if payload.start_time.is_some() && payload.end_time.is_some() {
         sqlx::query_as::<_, get_data::KlineRow>(
-            "SELECT open_time, open, high, low, close, volume FROM market_data WHERE symbol = $1 AND interval = $2 AND open_time >= $3 AND open_time <= $4 ORDER BY open_time ASC"
+            "SELECT open_time, open, high, low, close, volume FROM market_data_by_backtest WHERE symbol = $1 AND interval = $2 AND open_time >= $3 AND open_time <= $4 ORDER BY open_time ASC"
         )
         .bind(&symbol)
         .bind(&payload.interval)
@@ -264,18 +274,69 @@ async fn run_backtest(
         .bind(payload.end_time.unwrap())
     } else {
         sqlx::query_as::<_, get_data::KlineRow>(
-            "SELECT open_time, open, high, low, close, volume FROM market_data WHERE symbol = $1 AND interval = $2 ORDER BY open_time ASC"
+            "SELECT open_time, open, high, low, close, volume FROM market_data_by_backtest WHERE symbol = $1 AND interval = $2 ORDER BY open_time ASC"
         )
         .bind(&symbol)
         .bind(&payload.interval)
     };
 
     let rows = query.fetch_all(&state.pool).await.unwrap_or_default();
-    let klines: Vec<get_data::Kline> = rows.into_iter().map(|r| r.into()).collect();
+    let mut klines: Vec<get_data::Kline> = rows.into_iter().map(|r| r.into()).collect();
+
+    // Auto data acquisition logic: if database has insufficient rows, pull from Binance API in chunks
+    if klines.len() < 100 && payload.start_time.is_some() && payload.end_time.is_some() {
+        let start_ts = payload.start_time.unwrap();
+        let end_ts = payload.end_time.unwrap();
+        let mut current_start = start_ts;
+        let mut all_klines = Vec::new();
+        let mut api_calls = 0;
+
+        // Fetch in batches of 1000 up to 5 times (max 5000 candles per backtest request)
+        while current_start < end_ts && api_calls < 5 {
+            api_calls += 1;
+            match get_data::fetch_binance_klines(&symbol, &payload.interval, Some(current_start), Some(end_ts)).await {
+                Ok(chunk) => {
+                    if chunk.is_empty() {
+                        break;
+                    }
+                    let last_time = chunk.last().unwrap().open_time;
+                    all_klines.extend(chunk);
+                    if last_time <= current_start {
+                        break;
+                    }
+                    current_start = last_time + 1; // Advance start time by 1ms to get next candles
+                }
+                Err(e) => {
+                    eprintln!("Failed to dynamically fetch klines from Binance API: {:?}", e);
+                    break;
+                }
+            }
+        }
+
+        if !all_klines.is_empty() {
+            // Save to database so next time is cached and extremely fast
+            let _ = get_data::save_klines_to_db(&state.pool, &symbol, &payload.interval, all_klines.clone()).await;
+            
+            // Merge local klines with fetched klines, sort, and deduplicate
+            klines.extend(all_klines);
+            klines.sort_by_key(|k| k.open_time);
+            klines.dedup_by_key(|k| k.open_time);
+        }
+    }
+
+    // Parse selected indicators from settings
+    let selected_indicators: Vec<strategies::indicators::SelectedIndicator> = payload.settings
+        .as_ref()
+        .and_then(|s| s.get("indicators"))
+        .and_then(|v| serde_json::from_value(v.clone()).ok())
+        .unwrap_or_default();
+
+    // Build the indicator filter
+    let filter = strategies::indicators::IndicatorFilter::build(&klines, &selected_indicators);
 
     match payload.strategy_id.as_str() {
         "dca_lite" => {
-            let result = strategies::dca_lite::run_dca_backtest(&klines, payload.modal);
+            let result = strategies::dca_lite::run_dca_backtest(&klines, payload.modal, &filter);
             Json(result)
         },
         "dca_pro" => {
@@ -306,7 +367,7 @@ async fn run_backtest(
                     daily_drawdown_limit: None,
                 }
             };
-            let result = strategies::dca_pro::run_dca_pro_backtest(&klines, settings, payload.modal);
+            let result = strategies::dca_pro::run_dca_pro_backtest(&klines, settings, payload.modal, &filter);
             Json(result)
         },
         "grid_lite" => {
@@ -321,7 +382,7 @@ async fn run_backtest(
                     daily_drawdown_limit: None,
                 }
             };
-            let result = strategies::grid_lite::run_grid_backtest(&klines, settings);
+            let result = strategies::grid_lite::run_grid_backtest(&klines, settings, &filter);
             Json(result)
         },
         "combo_lite" => {
@@ -337,7 +398,7 @@ async fn run_backtest(
                     daily_drawdown_limit: None,
                 }
             };
-            let result = strategies::combo_lite::run_combo_backtest(&klines, settings);
+            let result = strategies::combo_lite::run_combo_backtest(&klines, settings, &filter);
             Json(result)
         },
         "trailing_lite" => {
@@ -352,7 +413,7 @@ async fn run_backtest(
                     daily_drawdown_limit: None,
                 }
             };
-            let result = strategies::trailing_lite::run_trailing_backtest(&klines, settings);
+            let result = strategies::trailing_lite::run_trailing_backtest(&klines, settings, &filter);
             Json(result)
         },
         "bollinger_pro" => {
@@ -366,7 +427,7 @@ async fn run_backtest(
                     daily_drawdown_limit: None,
                 }
             };
-            let result = strategies::bollinger_pro::run_bollinger_backtest(&klines, settings);
+            let result = strategies::bollinger_pro::run_bollinger_backtest(&klines, settings, &filter);
             Json(result)
         },
         "ema_pro" => {
@@ -380,7 +441,7 @@ async fn run_backtest(
                     daily_drawdown_limit: None,
                 }
             };
-            let result = strategies::ema_pro::run_ema_cross_backtest(&klines, settings);
+            let result = strategies::ema_pro::run_ema_cross_backtest(&klines, settings, &filter);
             Json(result)
         },
         "rsi_pro" => {
@@ -396,7 +457,7 @@ async fn run_backtest(
                     daily_drawdown_limit: None,
                 }
             };
-            let result = strategies::rsi_pro::run_rsi_dca_backtest(&klines, settings);
+            let result = strategies::rsi_pro::run_rsi_dca_backtest(&klines, settings, &filter);
             Json(result)
         },
         _ => {
@@ -479,20 +540,44 @@ async fn get_indicators() -> Json<Vec<IndicatorInfo>> {
     Json(indicators)
 }
 
-async fn get_trades(State(state): State<AppState>) -> Json<Vec<UserTrade>> {
-    // In real implementation, filter by user_id from JWT
-    let trades = sqlx::query_as::<_, UserTrade>("SELECT * FROM trades ORDER BY created_at DESC LIMIT 50")
-        .fetch_all(&state.pool)
-        .await
-        .unwrap_or_default();
+async fn get_trades(
+    State(state): State<AppState>,
+    headers: axum::http::HeaderMap,
+) -> (StatusCode, Json<Vec<UserTrade>>) {
+    let user_id = match get_user_id_from_headers(&headers).await {
+        Some(id) => id,
+        None => return (StatusCode::UNAUTHORIZED, Json(vec![])),
+    };
+    
+    let trades = sqlx::query_as::<_, UserTrade>(
+        "SELECT id, pair, strategy_type, side, price, amount, pnl, created_at, status FROM trades_by_jurnalriwayat WHERE user_id = $1 ORDER BY created_at DESC LIMIT 50"
+    )
+    .bind(user_id)
+    .fetch_all(&state.pool)
+    .await
+    .unwrap_or_default();
         
-    Json(trades)
+    (StatusCode::OK, Json(trades))
+}
+
+async fn get_user_id_from_headers(headers: &axum::http::HeaderMap) -> Option<i32> {
+    let auth_header = headers.get("Authorization")?.to_str().ok()?;
+    let token = auth_header.replace("Bearer ", "");
+    let secret = env::var("JWT_SECRET").unwrap_or_else(|_| "secret".into());
+    
+    let token_data = jsonwebtoken::decode::<postgres_auth_hub::Claims>(
+        &token,
+        &jsonwebtoken::DecodingKey::from_secret(secret.as_ref()),
+        &jsonwebtoken::Validation::default(),
+    ).ok()?;
+
+    Some(token_data.claims.sub)
 }
 
 async fn get_chat_history(State(state): State<AppState>, axum::extract::Query(params): axum::extract::Query<serde_json::Value>) -> Json<Vec<ChatMessage>> {
     let user_id = params.get("user_id").and_then(|v| v.as_str()).and_then(|v| v.parse::<i32>().ok()).unwrap_or(0);
     
-    let messages = sqlx::query_as::<_, ChatMessage>("SELECT * FROM chat_messages WHERE user_id = $1 ORDER BY created_at ASC LIMIT 100")
+    let messages = sqlx::query_as::<_, ChatMessage>("SELECT * FROM chat_messages_by_chat WHERE user_id = $1 ORDER BY created_at ASC LIMIT 100")
         .bind(user_id)
         .fetch_all(&state.pool)
         .await
@@ -532,7 +617,7 @@ async fn on_connect(socket: SocketRef) {
         let sender = data.get("sender").and_then(|v| v.as_str()).unwrap_or("user");
         let user_id = data.get("user_id").and_then(|v| v.as_i64()).unwrap_or(0) as i32;
 
-        let _ = sqlx::query("INSERT INTO chat_messages (user_id, sender, text) VALUES ($1, $2, $3)")
+        let _ = sqlx::query("INSERT INTO chat_messages_by_chat (user_id, sender, text) VALUES ($1, $2, $3)")
             .bind(user_id)
             .bind(sender)
             .bind(text)

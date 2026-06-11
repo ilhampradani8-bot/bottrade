@@ -1,5 +1,6 @@
 use crate::get_data::Kline;
 use crate::strategies::{Trade, BacktestResult};
+use crate::strategies::indicators::IndicatorFilter;
 use rust_decimal::prelude::ToPrimitive;
 use rust_decimal::Decimal;
 use rust_decimal_macros::dec;
@@ -18,7 +19,7 @@ pub struct BollingerSettings {
     pub daily_drawdown_limit: Option<Decimal>,
 }
 
-pub fn run_bollinger_backtest(klines: &[Kline], settings: BollingerSettings) -> BacktestResult {
+pub fn run_bollinger_backtest(klines: &[Kline], settings: BollingerSettings, filter: &IndicatorFilter) -> BacktestResult {
     let mut balance = dec!(10000000);
     let mut position_size = dec!(0);
     let mut trades = Vec::new();
@@ -90,7 +91,7 @@ pub fn run_bollinger_backtest(klines: &[Kline], settings: BollingerSettings) -> 
         let current_price = klines[i].close.to_f64().unwrap();
 
         // Buy when price hits lower band
-        if position_size == dec!(0) && current_price <= lower_band {
+        if position_size == dec!(0) && current_price <= lower_band && filter.allows_buy(i) {
             let buy_price = klines[i].close;
             position_size = settings.buy_amount / buy_price;
             balance -= settings.buy_amount;
@@ -133,6 +134,9 @@ pub fn run_bollinger_backtest(klines: &[Kline], settings: BollingerSettings) -> 
     let mut indicator_data = std::collections::HashMap::new();
     indicator_data.insert("upper_band".into(), upper_band_history);
     indicator_data.insert("lower_band".into(), lower_band_history);
+    for (key, val) in &filter.computed_data {
+        indicator_data.insert(key.clone(), val.clone());
+    }
 
     BacktestResult {
         total_trades: trades.len(),
