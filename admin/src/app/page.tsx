@@ -2,132 +2,192 @@
 
 import React, { useEffect, useState } from 'react';
 import { 
-  TrendingUp, 
-  Users, 
-  Cpu, 
-  Zap,
-  ArrowUpRight,
-  Clock,
-  RefreshCcw
+  Download,
+  CheckCircle2,
+  AlertCircle,
+  History,
+  Calendar
 } from 'lucide-react';
 
-interface AdminOverview {
-  total_users: number;
-  active_bots: number;
-  total_trades: number;
-  total_profit: number;
-}
+const BINANCE_SYMBOLS = [
+  "BTCUSDT", "ETHUSDT", "BNBUSDT", "SOLUSDT", "ADAUSDT", "XRPUSDT", "DOTUSDT", "DOGEUSDT", "AVAXUSDT", "LTCUSDT",
+  "MATICUSDT", "LINKUSDT", "UNIUSDT", "BCHUSDT", "FILUSDT", "ATOMUSDT", "TRXUSDT", "ETCUSDT", "XLMUSDT", "FTMUSDT"
+];
 
 export default function Dashboard() {
-  const [data, setData] = useState<AdminOverview | null>(null);
-  const [loading, setLoading] = useState(true);
+  const [symbol, setSymbol] = useState('BTCUSDT');
+  const [interval, setInterval] = useState('1h');
+  const [startDate, setStartDate] = useState('');
+  const [endDate, setEndDate] = useState('');
+  const [loadingSync, setLoadingSync] = useState(false);
+  const [logs, setLogs] = useState<any[]>([]);
 
-  const fetchOverview = async () => {
+  const handleSync = async () => {
+    setLoadingSync(true);
+    const logId = Date.now();
+    
+    // Convert dates to timestamps (ms)
+    const startTimestamp = startDate ? new Date(startDate).getTime() : null;
+    const endTimestamp = endDate ? new Date(endDate).getTime() : null;
+
+    const newLog = { 
+      id: logId, 
+      time: new Date().toLocaleTimeString(), 
+      msg: `Memulai pengambilan data ${symbol} (${interval})...`, 
+      status: 'pending' 
+    };
+    setLogs(prev => [newLog, ...prev]);
+
     try {
-      setLoading(true);
-      const res = await fetch('http://139.59.122.230:8080/api/admin/overview');
-      const json = await res.json();
-      setData(json);
-    } catch (err) {
-      console.error("Failed to fetch admin overview:", err);
+      const apiHost = window.location.hostname;
+      const res = await fetch(`http://${apiHost}:8080/api/sync-data`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+          symbol,
+          interval,
+          start_time: startTimestamp,
+          end_time: endTimestamp
+        })
+      });
+
+      if (res.ok) {
+        const resData = await res.json();
+        if (resData.status === 'success') {
+          setLogs(prev => prev.map(log => 
+            log.id === logId 
+              ? { ...log, status: 'success', msg: `Berhasil! Sinkronisasi selesai. ${resData.added_count} data baru tersimpan.` } 
+              : log
+          ));
+        } else {
+          setLogs(prev => prev.map(log => 
+            log.id === logId 
+              ? { ...log, status: 'error', msg: `Gagal: ${resData.message}` } 
+              : log
+          ));
+        }
+      } else {
+        setLogs(prev => prev.map(log => 
+          log.id === logId 
+            ? { ...log, status: 'error', msg: `Gagal: Server merespon dengan status ${res.status}` } 
+            : log
+        ));
+      }
+    } catch (err: any) {
+      setLogs(prev => prev.map(log => 
+        log.id === logId 
+          ? { ...log, status: 'error', msg: `Error Koneksi: ${err.message}` } 
+          : log
+      ));
     } finally {
-      setLoading(false);
+      setLoadingSync(false);
     }
   };
 
-  useEffect(() => {
-    fetchOverview();
-  }, []);
-
-  const stats = [
-    { label: 'Total Net Profit', value: `$${data?.total_profit.toFixed(2) || '0.00'}`, up: true, icon: TrendingUp },
-    { label: 'Active Fleet', value: data?.active_bots.toString() || '0', up: true, icon: Zap },
-    { label: 'Registered Traders', value: data?.total_users.toString() || '0', up: true, icon: Users },
-    { label: 'Lifetime Trades', value: data?.total_trades.toString() || '0', up: true, icon: Cpu },
-  ];
-
   return (
-    <div className="space-y-8">
-      {/* Page Header */}
-      <div className="flex justify-between items-end">
-        <div>
-          <h1 className="text-2xl font-bold tracking-tight text-white">Master Control Center (SQL)</h1>
-          <p className="text-[#6a6a75] text-sm mt-1">Real-time system-wide overview from PostgreSQL database.</p>
-        </div>
-        <button 
-            onClick={fetchOverview}
-            className="bg-white/5 border border-white/10 p-2 text-white hover:text-[#00f2ff] transition-all rounded-xl"
+    <div className="grid grid-cols-1 lg:grid-cols-12 gap-10">
+      {/* Form Konfigurasi */}
+      <div className="lg:col-span-5 space-y-6">
+        <div className="space-y-4">
+          <div className="space-y-1.5">
+            <label className="text-[10px] uppercase font-bold text-[#6a6a75] tracking-widest px-1">Simbol Koin</label>
+            <select 
+              value={symbol} 
+              onChange={(e) => setSymbol(e.target.value)}
+              className="w-full bg-white/5 border border-white/10 text-white p-3.5 rounded-2xl outline-none focus:border-sky-500/50 hover:bg-white/[0.08] transition-all cursor-pointer font-semibold text-sm"
+            >
+              {BINANCE_SYMBOLS.map(s => <option key={s} value={s} className="bg-[#0a0c14]">{s}</option>)}
+            </select>
+          </div>
+
+          <div className="space-y-1.5">
+            <label className="text-[10px] uppercase font-bold text-[#6a6a75] tracking-widest px-1">Waktu Per Lilin (Interval)</label>
+            <select 
+              value={interval} 
+              onChange={(e) => setInterval(e.target.value)}
+              className="w-full bg-white/5 border border-white/10 text-white p-3.5 rounded-2xl outline-none focus:border-sky-500/50 hover:bg-white/[0.08] transition-all cursor-pointer font-semibold text-sm"
+            >
+              <option value="1m" className="bg-[#0a0c14]">1 Menit</option>
+              <option value="5m" className="bg-[#0a0c14]">5 Menit</option>
+              <option value="15m" className="bg-[#0a0c14]">15 Menit</option>
+              <option value="1h" className="bg-[#0a0c14]">1 Jam</option>
+              <option value="4h" className="bg-[#0a0c14]">4 Jam</option>
+              <option value="1d" className="bg-[#0a0c14]">1 Hari</option>
+            </select>
+          </div>
+
+          <div className="grid grid-cols-2 gap-4">
+            <div className="space-y-1.5">
+              <label className="text-[10px] uppercase font-bold text-[#6a6a75] tracking-widest px-1">Dari Tanggal</label>
+              <input 
+                type="date" 
+                value={startDate} 
+                onChange={(e) => setStartDate(e.target.value)}
+                className="w-full bg-white/5 border border-white/10 text-white p-3 rounded-xl outline-none focus:border-sky-500/50 hover:bg-white/[0.08] transition-all font-semibold text-xs"
+              />
+            </div>
+            <div className="space-y-1.5">
+              <label className="text-[10px] uppercase font-bold text-[#6a6a75] tracking-widest px-1">Sampai Tanggal</label>
+              <input 
+                type="date" 
+                value={endDate} 
+                onChange={(e) => setEndDate(e.target.value)}
+                className="w-full bg-white/5 border border-white/10 text-white p-3 rounded-xl outline-none focus:border-sky-500/50 hover:bg-white/[0.08] transition-all font-semibold text-xs"
+              />
+            </div>
+          </div>
+
+          <button 
+            onClick={handleSync}
+            disabled={loadingSync}
+            className="w-full py-4 bg-sky-600 hover:bg-sky-500 active:scale-[0.98] text-white transition-all font-bold text-xs uppercase tracking-wider rounded-2xl flex items-center justify-center gap-2 disabled:opacity-50 disabled:active:scale-100 cursor-pointer shadow-lg shadow-sky-500/10 border border-sky-400/20"
           >
-            <RefreshCcw size={18} className={loading ? 'animate-spin' : ''} />
-        </button>
-      </div>
-
-      {/* Stats Grid */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-        {stats.map((stat) => (
-          <div key={stat.label} className="bg-white/[0.03] border border-white/5 p-6 hover:border-white/20 transition-all group rounded-3xl">
-            <div className="flex justify-between items-start mb-4">
-              <div className="p-2.5 bg-white text-black rounded-xl">
-                <stat.icon size={20} />
-              </div>
-              <div className="flex items-center text-[10px] font-bold text-emerald-500">
-                <ArrowUpRight size={12} />
-                LIVE
-              </div>
-            </div>
-            <div className="text-[10px] uppercase tracking-widest text-[#6a6a75] font-bold mb-1">
-              {stat.label}
-            </div>
-            <div className="text-2xl font-bold font-mono tracking-tighter text-white">
-              {loading ? '---' : stat.value}
-            </div>
-          </div>
-        ))}
-      </div>
-
-      {/* Main Content Area */}
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-        {/* System Logs / Timeline */}
-        <div className="lg:col-span-2 bg-white/[0.03] border border-white/5 rounded-3xl overflow-hidden">
-          <div className="p-6 border-b border-white/5 flex justify-between items-center">
-            <h2 className="text-sm font-bold uppercase tracking-widest text-white">Security Stream</h2>
-            <div className="flex gap-2">
-                <div className="px-2 py-1 bg-emerald-500/10 text-emerald-500 text-[9px] font-bold rounded-md">ENCRYPTED</div>
-            </div>
-          </div>
-          <div className="p-6 space-y-6">
-            {[1, 2, 3, 4].map((i) => (
-              <div key={i} className="flex gap-4">
-                <div className="mt-1">
-                  <div className="w-1.5 h-1.5 bg-white rounded-full"></div>
-                </div>
-                <div>
-                  <div className="text-xs text-[#e0e0e6] leading-relaxed">
-                    <span className="font-bold text-white uppercase">[AUDIT]</span> System performed routine check on PostgreSQL hypertable integrity.
-                  </div>
-                  <div className="flex items-center gap-1 text-[10px] text-[#6a6a75] mt-1">
-                    <Clock size={10} />
-                    <span>{i * 12}m ago</span>
-                  </div>
-                </div>
-              </div>
-            ))}
-          </div>
+            {loadingSync ? <div className="animate-spin rounded-full h-4 w-4 border-2 border-white/30 border-t-white" /> : <Download size={16} />}
+            {loadingSync ? 'Syncing...' : 'Mulai Sinkronisasi'}
+          </button>
         </div>
 
-        {/* Quick System Health */}
-        <div className="bg-white/[0.03] border border-white/5 p-8 rounded-3xl flex flex-col justify-center items-center text-center">
-            <div className="w-16 h-16 bg-emerald-500/10 text-emerald-500 rounded-2xl flex items-center justify-center mb-6 shadow-2xl shadow-emerald-500/20">
-                <Cpu size={32} />
+        <div className="flex gap-3 text-sky-400/70">
+          <Calendar className="shrink-0" size={16} />
+          <p className="text-[10px] leading-relaxed font-medium">
+            Binance membatasi 1000 data per permintaan. Jika rentang waktu terlalu jauh, sistem mengambil 1000 data terakhir.
+          </p>
+        </div>
+      </div>
+
+      {/* Real-time Logs */}
+      <div className="lg:col-span-7 space-y-4">
+        <h3 className="text-xs font-bold uppercase tracking-wider flex items-center gap-2 text-[#6a6a75]">
+          <History size={14} /> Aktivitas Log
+        </h3>
+
+        <div className="h-[400px] overflow-y-auto space-y-3 pr-2 custom-scrollbar">
+          {logs.length === 0 && (
+            <div className="h-full flex flex-col items-center justify-center text-[#3a3a44]">
+              <p className="text-xs italic">Menunggu perintah sinkronisasi...</p>
             </div>
-            <h3 className="text-white font-bold mb-2 uppercase tracking-widest text-xs">Kernel Integrity</h3>
-            <p className="text-[#6a6a75] text-[11px] leading-relaxed mb-6">
-                Rust Engine (Axum) is operating within normal parameters. 
-                Average latency: 42ms.
-            </p>
-            <div className="w-full py-3 bg-white text-black font-bold text-[10px] rounded-xl uppercase tracking-widest">
-                System Healthy
+          )}
+          {logs.map(log => (
+            <div key={log.id} className="p-4 bg-white/[0.02] rounded-2xl border border-white/5 flex gap-4 animate-in slide-in-from-right-4 duration-300">
+              <div className="mt-1">
+                {log.status === 'success' ? <CheckCircle2 className="text-sky-400" size={14} /> :
+                 log.status === 'error' ? <AlertCircle className="text-red-400" size={14} /> :
+                 <div className="w-3.5 h-3.5 border-2 border-sky-500/20 border-t-sky-400 rounded-full animate-spin" />}
+              </div>
+              <div className="flex-1">
+                <div className="flex justify-between items-center mb-1">
+                  <span className="text-[9px] font-bold text-slate-500 tracking-tighter">{log.time}</span>
+                  <span className={`text-[8px] font-bold px-2 py-0.5 rounded-full uppercase ${
+                    log.status === 'success' ? 'bg-sky-500/10 text-sky-400' :
+                    log.status === 'error' ? 'bg-red-500/10 text-red-400' : 'bg-sky-500/10 text-sky-400'
+                  }`}>{log.status}</span>
+                </div>
+                <p className="text-[11px] text-slate-300 leading-relaxed font-medium">{log.msg}</p>
+              </div>
             </div>
+          ))}
         </div>
       </div>
     </div>

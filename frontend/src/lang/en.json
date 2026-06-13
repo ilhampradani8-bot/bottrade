@@ -7,11 +7,13 @@
     "user_account": "User Account"
   },
   "sidebar": {
-    "overview": "Overview",
+    "overview": "Dashboard",
     "strategy_settings": "Strategy Settings",
-    "api_settings": "API Settings",
-    "lab_simulation": "Lab Simulation",
-    "find_bot": "Find Bot",
+    "api_settings": "API Credentials",
+    "lab_simulation": "Quant Lab",
+    "find_bot": "Find Assistant",
+    "trading_journal": "Trading Journal",
+    "chat_support": "Concierge",
     "database": "Database SQL",
     "acquire_data": "Acquire Data",
     "hide_sidebar": "Hide Sidebar"
@@ -77,5 +79,21 @@
     "trailing_off": "OFF",
     "price": "Price",
     "percentage": "Percentage"
+  },
+  "overview": {
+    "performance_growth": "Performance Growth",
+    "realtime_tracking": "Real-time capital tracking",
+    "hide_accounts": "Hide Accounts",
+    "show_accounts": "Show Account Details",
+    "setup_bot_strategy": "Setup Bot Strategy",
+    "capital_in_use": "Capital In Use",
+    "bot_strategy": "Bot Strategy",
+    "total": "Total",
+    "active": "Active",
+    "off": "Off",
+    "trading_system_active": "Trading System Active",
+    "connected_accounts_list": "Connected Accounts List",
+    "no_api_keys": "No API Keys connected yet",
+    "accounts": "Accounts"
   }
 }

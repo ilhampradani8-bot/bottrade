@@ -52,3 +52,6 @@ whatsapp-service/node_modules/
 *.sw?
 .antigravityignore
 .antigrav*
+
+# Centrifugo binaries
+centrifugo/centrifugo

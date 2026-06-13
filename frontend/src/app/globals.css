@@ -1,7 +1,8 @@
+@import url('https://fonts.googleapis.com/css2?family=Noto+Sans+SC:wght@300;400;700;900&display=swap');
 @import "tailwindcss";
 
 @theme {
-  --font-sans: -apple-system, BlinkMacSystemFont, "SF Pro Display", "Inter", system-ui, sans-serif;
+  --font-sans: -apple-system, BlinkMacSystemFont, "SF Pro Display", "Inter", "Noto Sans SC", system-ui, sans-serif;
 }
 
 :root {
@@ -366,6 +367,103 @@ body.light-theme footer {
 
 .font-anton {
   font-family: 'Anton', sans-serif;
+}
+
+/* Excel Spreadsheet Light Mode Overrides */
+body.light-theme .bg-zinc-950 {
+  background-color: #ffffff !important;
+}
+body.light-theme .bg-zinc-900 {
+  background-color: #f8fafc !important;
+}
+body.light-theme .bg-zinc-900\/50 {
+  background-color: rgba(248, 250, 252, 0.5) !important;
+}
+body.light-theme .bg-white\/\[0\.02\] {
+  background-color: #f1f5f9 !important;
+}
+body.light-theme .border-zinc-800 {
+  border-color: #cbd5e1 !important;
+}
+body.light-theme .text-slate-400 {
+  color: #1f2937 !important;
+}
+body.light-theme .text-slate-500 {
+  color: #4b5563 !important;
+}
+body.light-theme .text-slate-300 {
+  color: #1f2937 !important;
+}
+body.light-theme .text-slate-200 {
+  color: #111827 !important;
+}
+body.light-theme .text-white\/40 {
+  color: rgba(0, 0, 0, 0.4) !important;
+}
+body.light-theme .text-white\/20 {
+  color: rgba(0, 0, 0, 0.2) !important;
+}
+body.light-theme select option {
+  background-color: #ffffff !important;
+  color: #111827 !important;
+}
+body.light-theme .border-white\/10 {
+  border-color: #cbd5e1 !important;
+}
+body.light-theme .border-white\/5 {
+  border-color: #e2e8f0 !important;
+}
+body.light-theme tr:hover {
+  background-color: #f1f5f9 !important;
+}
+body.light-theme input, 
+body.light-theme select {
+  color: #111827 !important;
+}
+body.light-theme select {
+  background-color: #ffffff !important;
+  border-color: #cbd5e1 !important;
+}
+body.light-theme .text-emerald-400 {
+  color: #047857 !important;
+}
+body.light-theme .text-rose-400 {
+  color: #b91c1c !important;
+}
+body.light-theme .text-blue-400 {
+  color: #1d4ed8 !important;
+}
+body.light-theme .bg-emerald-500\/10 {
+  background-color: #d1fae5 !important;
+  color: #065f46 !important;
+}
+body.light-theme .bg-rose-500\/10 {
+  background-color: #fee2e2 !important;
+  color: #991b1b !important;
+}
+body.light-theme .bg-blue-500\/10 {
+  background-color: #dbeafe !important;
+  color: #1e40af !important;
+}
+body.light-theme .bg-yellow-500\/10 {
+  background-color: #fef3c7 !important;
+  color: #92400e !important;
+}
+body.light-theme .bg-white\/5 {
+  background-color: #ffffff !important;
+  border-color: #cbd5e1 !important;
+  color: #1f2937 !important;
+}
+body.light-theme .bg-white\/5:hover {
+  background-color: #f1f5f9 !important;
+}
+body.light-theme .bg-black\/40 {
+  background-color: #ffffff !important;
+  border-color: #cbd5e1 !important;
+  color: #1f2937 !important;
+}
+body.light-theme .scrollbar-thumb-zinc-800 {
+  background-color: #cbd5e1 !important;
 }
 
 

@@ -1,0 +1,99 @@
+{
+  "navbar": {
+    "login": "登录",
+    "register": "注册",
+    "logout": "退出系统",
+    "pro_member": "专业会员",
+    "user_account": "用户账户"
+  },
+  "sidebar": {
+    "overview": "控制面板",
+    "strategy_settings": "策略设置",
+    "api_settings": "API 凭证",
+    "lab_simulation": "量化实验室",
+    "find_bot": "寻找助理",
+    "trading_journal": "交易日志",
+    "chat_support": "客服中心",
+    "database": "数据库 SQL",
+    "acquire_data": "数据同步",
+    "hide_sidebar": "隐藏侧边栏"
+  },
+  "strategy": {
+    "setup": "配置",
+    "logic_control": "逻辑与参数控制",
+    "fixed_nominal": "固定额度",
+    "safety_order": "安全委托 (补仓)",
+    "safety_order_desc": "安全委托是在资产价格下跌时，自动进行低位分批补仓的额度",
+    "time_interval": "时间间隔",
+    "target_tp": "目标止盈",
+    "stop_loss": "止损 (可选)",
+    "save_strategy": "保存策略",
+    "start_strategy": "启动策略",
+    "reset_default": "恢复默认",
+    "portfolio_assets": "投资组合资产",
+    "add_asset": "添加资产",
+    "select_platform": "选择平台 (API 密钥)",
+    "no_api_keys": "未连接 API 密钥"
+  },
+  "common": {
+    "days": "天",
+    "hours": "小时",
+    "minutes": "分钟",
+    "success": "成功",
+    "error": "错误"
+  },
+  "grid": {
+    "price_range": "价格区间",
+    "lower_price": "区间下限价格",
+    "upper_price": "区间上限价格",
+    "grid_number": "网格数量",
+    "grid_mode": "网格模式",
+    "arithmetic": "等差网格",
+    "geometric": "等比网格",
+    "trigger_price": "触发价格 (可选)",
+    "advanced": "高级设置",
+    "setup_warning": "单边趋势行情：如果价格持续单边上涨或下跌（超出网格区间）且不回调，网格机器人可能会产生浮亏。\\n\\n交易手续费：如果网格密度过高，请确保套利利润不会被交易所的交易手续费吞噬。",
+    "mode_desc": "等差网格：网格各层级之间的价格差额相同（例如，每上涨 $100 布置一层）。\\n\\n等比网格：各层级之间按相同的百分比分布（例如，每上涨 1% 布置一层）。更适合价格区间非常宽广的行情。",
+    "min_capital": "推荐最小资金",
+    "min_capital_desc": "根据您设置的网格数，您至少需要此资金额度，以确保每层网格均满足交易所的最小交易金额要求。"
+  },
+  "combo": {
+    "direction": "机器人方向",
+    "long": "多头 (做多)",
+    "short": "空头 (做空)",
+    "initial_margin": "初始保证金",
+    "leverage": "杠杆倍数",
+    "margin_mode": "保证金模式",
+    "cross": "全仓",
+    "isolated": "逐仓",
+    "grid_levels": "网格层级 (止盈)",
+    "dca_orders": "DCA 订单 (均价补仓)",
+    "grid_step": "网格步长 (%)",
+    "dca_step": "DCA 步长 (%)"
+  },
+  "trailing": {
+    "sl_type": "止损类型",
+    "sl_value": "止损触发值",
+    "trailing_sl": "移动止损",
+    "trailing_on": "开启",
+    "trailing_off": "关闭",
+    "price": "价格",
+    "percentage": "百分比"
+  },
+  "overview": {
+    "performance_growth": "表现增长趋势",
+    "realtime_tracking": "实时资金监控跟踪",
+    "hide_accounts": "隐藏账户",
+    "show_accounts": "查看账户详情",
+    "setup_bot_strategy": "配置机器人策略",
+    "capital_in_use": "在用总资本",
+    "bot_strategy": "机器人策略",
+    "total": "总计",
+    "active": "已激活",
+    "off": "已关闭",
+    "trading_system_active": "交易系统运行中",
+    "connected_accounts_list": "已连接账户列表",
+    "no_api_keys": "暂无已连接的 API 密钥",
+    "accounts": "账户"
+  }
+}

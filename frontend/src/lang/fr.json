@@ -1,0 +1,99 @@
+{
+  "navbar": {
+    "login": "Connexion",
+    "register": "S'inscrire",
+    "logout": "Déconnexion Système",
+    "pro_member": "Membre Pro",
+    "user_account": "Compte Utilisateur"
+  },
+  "sidebar": {
+    "overview": "Tableau de bord",
+    "strategy_settings": "Paramètres de Stratégie",
+    "api_settings": "Identifiants API",
+    "lab_simulation": "Simulation Lab",
+    "find_bot": "Trouver Assistant",
+    "trading_journal": "Journal de Trading",
+    "chat_support": "Service Concierge",
+    "database": "Base de données SQL",
+    "acquire_data": "Acquérir des Données",
+    "hide_sidebar": "Masquer la Barre"
+  },
+  "strategy": {
+    "setup": "Configuration",
+    "logic_control": "Contrôle Logique & Paramètres",
+    "fixed_nominal": "Nominal Fixe",
+    "safety_order": "Ordre de Sécurité",
+    "safety_order_desc": "L'ordre de sécurité est le montant d'achat supplémentaire si le prix de l'actif baisse (achat à bas prix)",
+    "time_interval": "Intervalle de Temps",
+    "target_tp": "Objectif de Take Profit",
+    "stop_loss": "Stop Loss (Optionnel)",
+    "save_strategy": "SAUVEGARDER STRATÉGIE",
+    "start_strategy": "DÉMARRER STRATÉGIE",
+    "reset_default": "Réinitialiser",
+    "portfolio_assets": "Actifs du Portefeuille",
+    "add_asset": "Ajouter Actif",
+    "select_platform": "Sélectionner Plateforme (Clés API)",
+    "no_api_keys": "Aucune clé API connectée"
+  },
+  "common": {
+    "days": "Jours",
+    "hours": "Heures",
+    "minutes": "Minutes",
+    "success": "Succès",
+    "error": "Erreur"
+  },
+  "grid": {
+    "price_range": "Plage de Prix",
+    "lower_price": "Prix Minimum",
+    "upper_price": "Prix Maximum",
+    "grid_number": "Nombre de Grilles",
+    "grid_mode": "Mode Grille",
+    "arithmetic": "Arithmétique",
+    "geometric": "Géométrique",
+    "trigger_price": "Prix de Déclenchement (Optionnel)",
+    "advanced": "Paramètres Avancés",
+    "setup_warning": "Marché en Tendance : Les bots de grille peuvent perdre de l'argent si le prix continue de monter ou descendre (hors limites) sans revenir dans la plage initiale.\\n\\nFrais de Transaction : Si la grille est trop serrée, assurez-vous que vos bénéfices ne sont pas consommés par les frais du courtier.",
+    "mode_desc": "Arithmétique : La distance entre les niveaux utilise la même différence de prix (ex: tous les 100 $).\\n\\nGéométrique : La distance utilise le même pourcentage (ex: chaque hausse de 1 %). Plus adapté aux larges plages de prix.",
+    "min_capital": "Capital Suggéré Minimum",
+    "min_capital_desc": "Basé sur le nombre de grilles, vous avez besoin de ce capital minimum pour que chaque grille respecte les exigences de transaction de la plateforme."
+  },
+  "combo": {
+    "direction": "Direction du Bot",
+    "long": "LONG (Achat)",
+    "short": "SHORT (Vente)",
+    "initial_margin": "Marge Initiale",
+    "leverage": "Effet de Levier",
+    "margin_mode": "Mode Marge",
+    "cross": "Cross",
+    "isolated": "Isolé",
+    "grid_levels": "Niveaux de Grille (Profit)",
+    "dca_orders": "Ordres DCA (Moyenne)",
+    "grid_step": "Pas de Grille (%)",
+    "dca_step": "Pas de DCA (%)"
+  },
+  "trailing": {
+    "sl_type": "Type de Stop Loss",
+    "sl_value": "Valeur Stop Loss",
+    "trailing_sl": "Trailing Stop Loss",
+    "trailing_on": "ON",
+    "trailing_off": "OFF",
+    "price": "Prix",
+    "percentage": "Pourcentage"
+  },
+  "overview": {
+    "performance_growth": "Croissance des Performances",
+    "realtime_tracking": "Suivi du capital en temps réel",
+    "hide_accounts": "Masquer les comptes",
+    "show_accounts": "Afficher les détails du compte",
+    "setup_bot_strategy": "Configurer la stratégie de bot",
+    "capital_in_use": "Capital utilisé",
+    "bot_strategy": "Stratégie de bot",
+    "total": "Total",
+    "active": "Actif",
+    "off": "Désactivé",
+    "trading_system_active": "Système de trading actif",
+    "connected_accounts_list": "Liste des comptes connectés",
+    "no_api_keys": "Aucune clé API connectée",
+    "accounts": "Comptes"
+  }
+}

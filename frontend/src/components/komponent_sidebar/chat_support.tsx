@@ -11,7 +11,7 @@ export default function ChatSupportItem({ activeView, setActiveView }: any) {
       className={`w-full sidebar-item ${activeView === 'chat' ? 'active' : ''}`}
     >
       <MessageSquare size={18} />
-      <span className="truncate">Concierge</span>
+      <span className="truncate">{t('sidebar.chat_support')}</span>
     </button>
   );
 }

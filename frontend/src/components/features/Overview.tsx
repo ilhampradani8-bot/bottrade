@@ -15,7 +15,10 @@ import {
 } from 'lucide-react';
 import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
 
+import { useLanguage } from '@/lang/LanguageContext';
+
 export default function Overview({ setActiveView }: { setActiveView?: (view: string) => void }) {
+  const { t } = useLanguage();
   const [mounted, setMounted] = useState(false);
   const [data, setData] = useState<any>(null);
   const [showAccounts, setShowAccounts] = useState(false);
@@ -69,9 +72,9 @@ export default function Overview({ setActiveView }: { setActiveView?: (view: str
         <div className="flex justify-between items-center px-4 py-2 border-b border-white/5">
           <div>
             <h2 className="text-[10px] font-black tracking-widest text-white uppercase flex items-center gap-2">
-              <TrendingUp size={12} className="text-blue-500" /> Pertumbuhan Performa
+              <TrendingUp size={12} className="text-blue-500" /> {t('overview.performance_growth')}
             </h2>
-            <p className="text-[8px] text-slate-500 uppercase font-bold">Pelacakan modal secara real-time</p>
+            <p className="text-[8px] text-slate-500 uppercase font-bold">{t('overview.realtime_tracking')}</p>
           </div>
           <div className="flex gap-2">
             <span className="px-2 py-0.5 bg-blue-600 text-white text-[8px] font-black uppercase tracking-widest rounded-[3px]">LIVE</span>
@@ -123,14 +126,14 @@ export default function Overview({ setActiveView }: { setActiveView?: (view: str
           className="neumorphic-btn px-4 py-2 text-[8px] font-black uppercase tracking-widest text-[#f5f5f7] flex items-center gap-2"
         >
           {showAccounts ? <EyeOff size={12} strokeWidth={2.5} /> : <Eye size={12} strokeWidth={2.5} />}
-          <span>{showAccounts ? 'Sembunyikan Akun' : 'Lihat Detail Akun'}</span>
+          <span>{showAccounts ? t('overview.hide_accounts') : t('overview.show_accounts')}</span>
         </button>
         <button 
           onClick={() => setActiveView && setActiveView('strategi-pengaturan')}
           className="neumorphic-btn px-4 py-2 text-[8px] font-black uppercase tracking-widest text-blue-400 hover:text-blue-300 flex items-center gap-2"
         >
           <Activity size={12} strokeWidth={2.5} />
-          <span>Atur Strategi Bot</span>
+          <span>{t('overview.setup_bot_strategy')}</span>
         </button>
       </div>
 
@@ -140,13 +143,13 @@ export default function Overview({ setActiveView }: { setActiveView?: (view: str
         {/* Stat 1: Capital In Use */}
         <div className="py-4 px-4 flex flex-col justify-between bg-transparent min-h-[100px]">
           <div>
-            <p className="text-slate-500 text-[8px] font-black uppercase tracking-widest mb-1">Modal Utama (Capital In Use)</p>
+            <p className="text-slate-500 text-[8px] font-black uppercase tracking-widest mb-1">{t('overview.capital_in_use')}</p>
             <div className="flex items-baseline gap-2">
               <span className="text-xl font-bold text-white tracking-tight">
                 {`Rp ${data?.total_capital?.toLocaleString('id-ID') || '0'}`}
               </span>
               <span className="text-[8px] font-black text-slate-400">
-                {`+${data?.connected_accounts?.length || 0} Akun`}
+                {`+${data?.connected_accounts?.length || 0} ${t('overview.accounts')}`}
               </span>
             </div>
           </div>
@@ -159,20 +162,20 @@ export default function Overview({ setActiveView }: { setActiveView?: (view: str
         {/* Stat 2: Bot Strategy */}
         <div className="py-4 px-4 flex flex-col justify-between bg-transparent min-h-[100px]">
           <div>
-            <p className="text-slate-500 text-[8px] font-black uppercase tracking-widest mb-1">Bot Strategi</p>
+            <p className="text-slate-500 text-[8px] font-black uppercase tracking-widest mb-1">{t('overview.bot_strategy')}</p>
             <div className="flex items-baseline gap-2">
               <span className="text-xl font-bold text-white tracking-tight">
-                {`${(data?.active_bots || 0) + (data?.inactive_bots || 0)} Total`}
+                {`${(data?.active_bots || 0) + (data?.inactive_bots || 0)} ${t('overview.total')}`}
               </span>
               <span className="text-[8px] font-black text-slate-400">
-                {`${data?.active_bots || 0} Aktif | ${data?.inactive_bots || 0} Off`}
+                {`${data?.active_bots || 0} ${t('overview.active')} | ${data?.inactive_bots || 0} ${t('overview.off')}`}
               </span>
             </div>
           </div>
           
           <div className="mt-2 flex items-center gap-1.5">
             <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
-            <span className="text-[8px] font-black text-slate-400 uppercase tracking-wider">Sistem Trading Aktif</span>
+            <span className="text-[8px] font-black text-slate-400 uppercase tracking-wider">{t('overview.trading_system_active')}</span>
           </div>
         </div>
 
@@ -181,7 +184,7 @@ export default function Overview({ setActiveView }: { setActiveView?: (view: str
       {/* Connected Accounts Dropdown/List (Full-width, compact, border only) */}
       {showAccounts && (
         <div className="w-full border-b border-white/10 py-3 px-4 space-y-2 bg-transparent animate-in slide-in-from-top-2">
-          <p className="text-[8px] font-black text-slate-500 uppercase tracking-widest">Daftar Akun Terhubung</p>
+          <p className="text-[8px] font-black text-slate-500 uppercase tracking-widest">{t('overview.connected_accounts_list')}</p>
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
             {data?.connected_accounts?.map((acc: any, i: number) => (
               <div key={i} className="flex justify-between items-center py-2 px-3 border border-white/5 bg-transparent rounded-[6px]">
@@ -197,7 +200,7 @@ export default function Overview({ setActiveView }: { setActiveView?: (view: str
             ))}
           </div>
           {data?.connected_accounts?.length === 0 && (
-            <p className="text-[8px] text-slate-600 uppercase font-bold italic">Belum ada API Key terhubung</p>
+            <p className="text-[8px] text-slate-600 uppercase font-bold italic">{t('overview.no_api_keys')}</p>
           )}
         </div>
       )}

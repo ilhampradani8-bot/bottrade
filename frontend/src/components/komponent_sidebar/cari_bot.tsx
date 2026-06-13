@@ -11,7 +11,7 @@ export default function CariBotItem({ activeView, setActiveView }: any) {
       className={`w-full sidebar-item ${activeView === 'cari-bot' ? 'active' : ''}`}
     >
       <Search size={18} />
-      <span className="truncate">Cari Asisten</span>
+      <span className="truncate">{t('sidebar.find_bot')}</span>
     </button>
   );
 }

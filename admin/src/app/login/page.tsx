@@ -17,7 +17,8 @@ export default function LoginPage() {
     setLoading(true);
 
     try {
-      const res = await fetch('http://139.59.122.230:8080/api/admin/login', {
+      const apiHost = window.location.hostname;
+      const res = await fetch(`http://${apiHost}:8080/api/admin/login`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ username, password })
@@ -27,7 +28,7 @@ export default function LoginPage() {
 
       if (res.ok && data.token) {
         localStorage.setItem('admin_token', data.token);
-        router.push('/');
+        window.location.href = '/';
       } else {
         setError(data.message || 'Login failed');
       }
@@ -47,8 +48,8 @@ export default function LoginPage() {
             <ShieldCheck size={42} strokeWidth={2.5} />
           </div>
           <div>
-            <h1 className="text-3xl font-bold tracking-tight text-white">BotTrade <span className="text-[#6a6a75] font-light">Admin</span></h1>
-            <p className="text-[#6a6a75] text-sm mt-2 font-medium">Restricted access kernel. Authorization required.</p>
+            <h1 className="text-3xl font-bold tracking-tight text-white">TradingSafe <span className="text-[#6a6a75] font-light">Admin</span></h1>
+            <p className="text-[#6a6a75] text-sm mt-2 font-medium">Authorization required.</p>
           </div>
         </div>
 
@@ -95,12 +96,6 @@ export default function LoginPage() {
             {!loading && <ArrowRight size={18} />}
           </button>
         </form>
-
-        <div className="text-center">
-            <p className="text-[10px] text-[#3a3a44] font-bold uppercase tracking-[0.2em]">
-                System Secure • IP Logged • v2.4.0
-            </p>
-        </div>
       </div>
     </div>
   );

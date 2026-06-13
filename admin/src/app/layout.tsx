@@ -17,11 +17,8 @@ export default function RootLayout({
 
   useEffect(() => {
     const token = localStorage.getItem('admin_token');
-    if (!token && pathname !== '/login') {
-      router.push('/login');
-    } else {
-      setAuthorized(true);
-    }
+    // Login protection is disabled for now as requested
+    setAuthorized(true);
   }, [pathname, router]);
 
   if (pathname === '/login') {

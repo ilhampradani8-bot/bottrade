@@ -11,7 +11,7 @@ export default function LabSimulasiItem({ activeView, setActiveView }: any) {
       className={`w-full sidebar-item ${activeView === 'tester' ? 'active' : ''}`}
     >
       <Beaker size={18} />
-      <span className="truncate">Quant Lab</span>
+      <span className="truncate">{t('sidebar.lab_simulation')}</span>
     </button>
   );
 }

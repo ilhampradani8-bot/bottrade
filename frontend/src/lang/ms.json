@@ -7,11 +7,13 @@
     "user_account": "Akaun Pengguna"
   },
   "sidebar": {
-    "overview": "Gambaran Keseluruhan",
+    "overview": "Dashboard",
     "strategy_settings": "Tetapan Strategi",
-    "api_settings": "Tetapan API",
-    "lab_simulation": "Simulasi Makmal",
-    "find_bot": "Cari Bot",
+    "api_settings": "Kredensial API",
+    "lab_simulation": "Quant Lab",
+    "find_bot": "Cari Asisten",
+    "trading_journal": "Jurnal Trading",
+    "chat_support": "Pusat Bantuan",
     "database": "Pangkalan Data SQL",
     "acquire_data": "Dapatkan Data",
     "hide_sidebar": "Sembunyikan Sisi"
@@ -77,5 +79,21 @@
     "trailing_off": "OFF",
     "price": "Harga",
     "percentage": "Peratusan"
+  },
+  "overview": {
+    "performance_growth": "Pertumbuhan Prestasi",
+    "realtime_tracking": "Penjejakan modal masa nyata",
+    "hide_accounts": "Sembunyikan Akaun",
+    "show_accounts": "Lihat Perincian Akaun",
+    "setup_bot_strategy": "Sediakan Strategi Bot",
+    "capital_in_use": "Modal Yang Digunakan",
+    "bot_strategy": "Strategi Bot",
+    "total": "Jumlah",
+    "active": "Aktif",
+    "off": "Off",
+    "trading_system_active": "Sistem Dagangan Aktif",
+    "connected_accounts_list": "Senarai Akaun Bersambung",
+    "no_api_keys": "Belum ada Kunci API disambungkan",
+    "accounts": "Akaun"
   }
 }

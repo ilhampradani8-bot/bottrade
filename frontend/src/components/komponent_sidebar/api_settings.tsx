@@ -11,7 +11,7 @@ export default function ApiSettingsItem({ activeView, setActiveView }: any) {
       className={`w-full sidebar-item ${activeView === 'api-key' ? 'active' : ''}`}
     >
       <Key size={18} />
-      <span className="truncate">Credentials</span>
+      <span className="truncate">{t('sidebar.api_settings')}</span>
     </button>
   );
 }

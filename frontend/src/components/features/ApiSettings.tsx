@@ -216,32 +216,30 @@ export default function ApiSettings() {
         </div>
       )}
 
-      {/* Header section with minimal borders */}
-      <header className="flex flex-col md:flex-row justify-between items-start md:items-center border-b border-white/5 pb-6 gap-6">
-        <div className="flex items-center gap-4">
-           <h1 className="text-lg sm:text-2xl md:text-3xl font-black text-white tracking-tight uppercase">
-             API <span className="bg-gradient-to-r from-blue-400 to-indigo-500 bg-clip-text text-transparent">Vault</span>
-           </h1>
+      {/* Header section with minimal borders, title removed to avoid duplication with Navbar */}
+      <header className="flex flex-row justify-between items-center border-b border-white/5 pb-4 gap-4">
+        <div className="flex items-center gap-2">
            <button 
              onClick={() => setShowSecurityInfo(true)}
-             className="p-2 bg-indigo-500/5 text-indigo-400 border border-indigo-500/10 hover:bg-indigo-500 hover:text-white rounded-[6px] transition-all"
+             className="p-2 bg-indigo-500/5 text-indigo-400 border border-indigo-500/10 hover:bg-indigo-500 hover:text-white rounded-[6px] transition-all flex items-center gap-1.5 text-[9px] font-black uppercase tracking-wider"
              title="Security Info"
            >
-              <Info size={16} />
+              <Info size={14} />
+              <span>Security Info</span>
            </button>
         </div>
 
         {/* Main Tab Switcher - Sleek Segmented Control style */}
-        <div className="flex p-1 bg-white/[0.03] border border-white/5 w-full md:w-auto rounded-[8px]">
+        <div className="flex p-1 bg-white/[0.03] border border-white/5 rounded-[8px]">
            <button 
              onClick={() => setMainTab('connect')}
-             className={`flex-1 md:flex-none px-6 py-2 text-xs font-bold uppercase tracking-wider rounded-[6px] transition-all duration-300 ${mainTab === 'connect' ? 'bg-indigo-600 text-white shadow-md' : 'text-slate-400 hover:text-white'}`}
+             className={`px-4 py-1.5 text-[10px] font-bold uppercase tracking-wider rounded-[6px] transition-all duration-300 ${mainTab === 'connect' ? 'bg-indigo-600 text-white shadow-md' : 'text-slate-400 hover:text-white'}`}
            >
              Connect New
            </button>
            <button 
              onClick={() => setMainTab('vault')}
-             className={`flex-1 md:flex-none px-6 py-2 text-xs font-bold uppercase tracking-wider rounded-[6px] transition-all duration-300 ${mainTab === 'vault' ? 'bg-indigo-600 text-white shadow-md' : 'text-slate-400 hover:text-white'}`}
+             className={`px-4 py-1.5 text-[10px] font-bold uppercase tracking-wider rounded-[6px] transition-all duration-300 ${mainTab === 'vault' ? 'bg-indigo-600 text-white shadow-md' : 'text-slate-400 hover:text-white'}`}
            >
              Active Vault
            </button>

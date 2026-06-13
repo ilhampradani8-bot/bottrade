@@ -7,14 +7,16 @@
     "user_account": "User Account"
   },
   "sidebar": {
-    "overview": "Overview",
-    "strategy_settings": "Strategy Settings",
-    "api_settings": "API Settings",
-    "lab_simulation": "Lab Simulation",
-    "find_bot": "Find Bot",
+    "overview": "Dashboard",
+    "strategy_settings": "Pengaturan Strategi",
+    "api_settings": "Kredensial API",
+    "lab_simulation": "Quant Lab",
+    "find_bot": "Cari Asisten",
+    "trading_journal": "Jurnal Trading",
+    "chat_support": "Layanan Concierge",
     "database": "Database SQL",
-    "acquire_data": "Acquire Data",
-    "hide_sidebar": "Hide Sidebar"
+    "acquire_data": "Sinkronisasi Data",
+    "hide_sidebar": "Sembunyikan Sidebar"
   },
   "strategy": {
     "setup": "Setup",
@@ -77,5 +79,21 @@
     "trailing_off": "OFF",
     "price": "Harga",
     "percentage": "Persentase"
+  },
+  "overview": {
+    "performance_growth": "Pertumbuhan Performa",
+    "realtime_tracking": "Pelacakan modal secara real-time",
+    "hide_accounts": "Sembunyikan Akun",
+    "show_accounts": "Lihat Detail Akun",
+    "setup_bot_strategy": "Atur Strategi Bot",
+    "capital_in_use": "Modal Utama (Capital In Use)",
+    "bot_strategy": "Bot Strategi",
+    "total": "Total",
+    "active": "Aktif",
+    "off": "Off",
+    "trading_system_active": "Sistem Trading Aktif",
+    "connected_accounts_list": "Daftar Akun Terhubung",
+    "no_api_keys": "Belum ada API Key terhubung",
+    "accounts": "Akun"
   }
 }

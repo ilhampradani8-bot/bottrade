@@ -3,6 +3,7 @@ import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
 import AdminLayout from "@/components/AdminLayout";
 import { LanguageProvider } from "@/lang/LanguageContext";
+import NextAuthProvider from "@/components/NextAuthProvider";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -32,9 +33,11 @@ export default function RootLayout({
         <link href="https://fonts.googleapis.com/css2?family=Anton&family=Inter:wght@300;400;500;600;700;800;900&family=Outfit:wght@300;400;500;600;700;800&family=Space+Grotesk:wght@300;400;500;600;700&display=swap" rel="stylesheet" />
       </head>
       <body className="antialiased">
-        <LanguageProvider>
-          <AdminLayout>{children}</AdminLayout>
-        </LanguageProvider>
+        <NextAuthProvider>
+          <LanguageProvider>
+            <AdminLayout>{children}</AdminLayout>
+          </LanguageProvider>
+        </NextAuthProvider>
       </body>
     </html>
   );

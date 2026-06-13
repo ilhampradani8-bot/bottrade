@@ -11,7 +11,8 @@ export default function JurnalRiwayatItem({ activeView, setActiveView }: any) {
       className={`w-full sidebar-item ${activeView === 'jurnal' ? 'active' : ''}`}
     >
       <History size={18} />
-      <span className="truncate">Trade Log</span>
+      <span className="truncate">{t('sidebar.trading_journal')}</span>
     </button>
   );
 }
+

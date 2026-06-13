@@ -8,13 +8,19 @@ import Overview from "@/components/features/Overview";
 import ApiSettings from "@/components/features/ApiSettings";
 import LabSimulasi from "@/components/features/LabSimulasi";
 import CariBot from "@/components/features/CariBot";
-import DataAcquisition from "@/components/features/DataAcquisition";
 import StrategySettings from "@/components/features/StrategySettings";
 import JurnalRiwayat from "@/components/features/JurnalRiwayat";
 import ChatSupport from "@/components/features/ChatSupport";
+import ChatSupportPage from "@/components/features/ChatSupportPage";
+import PengaturanAkun from "@/components/features/PengaturanAkun";
+import ForumStatic from "@/components/features/ForumStatic";
+import Afiliasi from "@/components/features/Afiliasi";
+import Berlangganan from "@/components/features/Berlangganan";
+import StatusAkun from "@/components/features/StatusAkun";
+import NotifikasiPage from "@/components/features/NotifikasiPage";
 import { LayoutDashboard, Search, Key, Menu, MessageSquare, Settings } from 'lucide-react';
 import { useLanguage } from '@/lang/LanguageContext';
-import { usePathname } from 'next/navigation';
+import { usePathname, useRouter } from 'next/navigation';
 
 export default function AdminLayout({
   children,
@@ -23,6 +29,7 @@ export default function AdminLayout({
 }) {
   const { t } = useLanguage();
   const pathname = usePathname();
+  const router = useRouter();
   const [isSidebarOpen, setIsSidebarOpen] = useState(true);
   const [activeView, setActiveView] = useState('overview');
   const [mounted, setMounted] = useState(false);
@@ -36,7 +43,14 @@ export default function AdminLayout({
     } else {
       document.body.classList.remove('light-theme');
     }
-  }, []);
+
+    // Redirect unauthenticated users to login page
+    const token = localStorage.getItem('token');
+    const isAuthPage = pathname === '/login' || pathname === '/home' || pathname === '/';
+    if (!token && !isAuthPage) {
+      router.push('/login');
+    }
+  }, [pathname, router]);
 
   // Close sidebar on mobile when view changes or on initial mount if mobile
   useEffect(() => {
@@ -52,9 +66,9 @@ export default function AdminLayout({
 
   if (!mounted) return null;
 
-  // Bypasses AdminLayout entirely if we are on the landing page routes
-  if (pathname === '/home' || pathname === '/') {
-    return <>{children}</>;
+  // Bypasses AdminLayout entirely if we are on the landing page or login routes
+  if (pathname === '/home' || pathname === '/' || pathname === '/login') {
+    return <>{children}<ChatSupport /></>;
   }
 
   const renderContent = () => {
@@ -63,10 +77,15 @@ export default function AdminLayout({
       case 'api-key': return <ApiSettings />;
       case 'tester': return <LabSimulasi />;
       case 'cari-bot': return <CariBot setActiveView={setActiveView} />;
-      case 'get-data': return <DataAcquisition />;
       case 'strategi-pengaturan': return <StrategySettings />;
       case 'jurnal': return <JurnalRiwayat />;
-      case 'chat': return <ChatSupport />;
+      case 'chat': return <ChatSupportPage />;
+      case 'pengaturan-akun': return <PengaturanAkun />;
+      case 'forum': return <ForumStatic />;
+      case 'afiliasi': return <Afiliasi />;
+      case 'berlangganan': return <Berlangganan />;
+      case 'status-akun': return <StatusAkun />;
+      case 'notifikasi': return <NotifikasiPage />;
       default: return <Overview setActiveView={setActiveView} />;
     }
   };
@@ -90,11 +109,11 @@ export default function AdminLayout({
           activeView={activeView}
           setActiveView={setActiveView}
         />
-        <main className={`flex-1 overflow-y-auto overflow-x-hidden pb-24 lg:pb-8 transition-all duration-300 p-0 flex flex-col justify-between min-h-[calc(100vh-56px)] pt-14 ${isSidebarOpen ? 'lg:pl-56' : 'lg:pl-0'}`}>
+        <main className={`flex-1 overflow-y-auto overflow-x-hidden transition-all duration-300 p-0 flex flex-col justify-between min-h-[calc(100vh-56px)] pt-14 ${isSidebarOpen ? 'lg:pl-56' : 'lg:pl-0'} ${activeView === 'jurnal' || activeView === 'chat' ? 'pb-0' : 'pb-24 lg:pb-8'}`}>
           <div className="max-w-none w-full animate-in fade-in slide-in-from-bottom-2 duration-500 flex-1">
             {renderContent()}
           </div>
-          <Footer setActiveView={setActiveView} />
+          {activeView !== 'jurnal' && activeView !== 'chat' && <Footer setActiveView={setActiveView} />}
         </main>
       </div>
 
@@ -129,6 +148,8 @@ export default function AdminLayout({
           <span className="text-[8px] font-bold tracking-tight">Hub</span>
         </button>
       </div>
+      {/* Global Real-time Chat Support Widget */}
+      <ChatSupport />
     </div>
   );
 }

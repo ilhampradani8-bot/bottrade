@@ -1,8 +1,23 @@
 import { languages, translations } from './lang/translations.js?v=1.1';
 
-let currentLang = localStorage.getItem('ts_lang') || 'en';
+let currentLang = localStorage.getItem('ts_lang') || localStorage.getItem('lang') || 'en';
 if (!translations[currentLang]) {
   currentLang = 'en';
+}
+
+function getFlagSvg(code) {
+  switch (code) {
+    case 'id':
+      return `<svg class="w-4 h-3 inline-block rounded-sm shadow-sm border border-black/10" viewBox="0 0 3 2" style="min-width: 16px;"><rect width="3" height="1" fill="#FF0000"/><rect y="1" width="3" height="1" fill="#FFFFFF"/></svg>`;
+    case 'en':
+      return `<svg class="w-4 h-3 inline-block rounded-sm shadow-sm border border-black/10" viewBox="0 0 50 30" style="min-width: 16px;"><clipPath id="t"><path d="M0 0v30h50V0z"/></clipPath><path d="M0 0v30h50V0z" fill="#012169"/><path d="M0 0l50 30M50 0L0 30" stroke="#fff" stroke-width="6" clip-path="url(#t)"/><path d="M0 0l50 30M50 0L0 30" stroke="#c8102e" stroke-width="4" clip-path="url(#t)"/><path d="M25 0v30M0 15h50" stroke="#fff" stroke-width="10"/><path d="M25 0v30M0 15h50" stroke="#c8102e" stroke-width="6"/></svg>`;
+    case 'fr':
+      return `<svg class="w-4 h-3 inline-block rounded-sm shadow-sm border border-black/10" viewBox="0 0 3 2" style="min-width: 16px;"><rect width="1" height="2" fill="#00209F"/><rect x="1" width="1" height="2" fill="#FFFFFF"/><rect x="2" width="1" height="2" fill="#F42C3E"/></svg>`;
+    case 'zh':
+      return `<svg class="w-4 h-3 inline-block rounded-sm shadow-sm border border-black/10" viewBox="0 0 30 20" fill="#ee1c25" style="min-width: 16px;"><rect width="30" height="20"/><circle cx="5" cy="5" r="3" fill="#ffde00"/><polygon points="5,2.5 5.6,4.1 7.2,4.1 5.9,5.1 6.4,6.7 5,5.7 3.6,6.7 4.1,5.1 2.8,4.1 4.4,4.1" fill="#ffde00"/></svg>`;
+    default:
+      return '';
+  }
 }
 
 function translatePage() {
@@ -20,7 +35,12 @@ function translatePage() {
   const activeLangObj = languages.find(l => l.code === currentLang) || languages[0];
   const activeLangSpan = document.getElementById('active-lang');
   if (activeLangSpan) {
-    activeLangSpan.textContent = activeLangObj.short.toUpperCase();
+    activeLangSpan.innerHTML = `
+      <div class="flex items-center gap-1.5">
+        ${getFlagSvg(currentLang)}
+        <span>${activeLangObj.short.toUpperCase()}</span>
+      </div>
+    `;
   }
 }
 
@@ -33,13 +53,17 @@ function buildLangDropdown() {
     const btn = document.createElement('button');
     btn.className = `w-full text-left px-3 py-1.5 rounded-md text-xs font-bold transition-all flex items-center justify-between ${currentLang === langObj.code ? 'nm-inset text-[#0071e3]' : 'hover:bg-slate-200/50 text-slate-700'}`;
     btn.innerHTML = `
-      <span>${langObj.label}</span>
+      <div class="flex items-center gap-2">
+        ${getFlagSvg(langObj.code)}
+        <span>${langObj.label}</span>
+      </div>
       <span class="text-[9px] opacity-60 uppercase">${langObj.short}</span>
     `;
     btn.addEventListener('click', (e) => {
       e.stopPropagation();
       currentLang = langObj.code;
       localStorage.setItem('ts_lang', currentLang);
+      localStorage.setItem('lang', currentLang);
       translatePage();
       buildLangDropdown(); // Rebuild to update active style
       dropdown.classList.add('hidden');

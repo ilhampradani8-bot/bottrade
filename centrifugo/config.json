@@ -1,0 +1,26 @@
+{
+  "client": {
+    "token": {
+      "hmac_secret_key": "jJdCZr9tPYW8iavMAHE7M4a4gchht0xfd7a6Ln5AT6Hl27qxZfYmwf6q00nG5SioroiDWKOsobGxqCanNwsGIA"
+    },
+    "allowed_origins": ["*"],
+    "allow_anonymous_connect_without_token": true
+  },
+  "channel": {
+    "namespaces": [
+      {
+        "name": "chat",
+        "publish": true,
+        "presence": true
+      }
+    ]
+  },
+  "admin": {
+    "enabled": true,
+    "password": "admin-password-123",
+    "secret": "E07Vn_OQ6Hdl5xMQveXw37q41hLltM3s-hh0oWG2ZrRluTL3LssN2p_yi4tunChez_wreIpij_6-a2HN17uE-w"
+  },
+  "http_api": {
+    "key": "api-key-123"
+  }
+}

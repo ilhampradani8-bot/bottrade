@@ -11,7 +11,7 @@ export default function OverviewItem({ activeView, setActiveView }: any) {
       className={`w-full sidebar-item ${activeView === 'overview' ? 'active' : ''}`}
     >
       <LayoutDashboard size={18} />
-      <span className="truncate">Dashboard</span>
+      <span className="truncate">{t('sidebar.overview')}</span>
     </button>
   );
 }

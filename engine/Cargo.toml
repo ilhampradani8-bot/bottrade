@@ -15,6 +15,10 @@ path = "src/analysis_engine.rs"
 name = "prediction-v2"
 path = "src/prediction_v2.rs"
 
+[[bin]]
+name = "engine-user-operator"
+path = "Engine-User/operator/main.rs"
+
 [dependencies]
 tokio = { version = "1.0", features = ["full"] }
 sqlx = { version = "0.7", features = ["runtime-tokio", "tls-rustls", "postgres", "chrono", "rust_decimal"] }
