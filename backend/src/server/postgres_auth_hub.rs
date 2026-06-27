@@ -671,9 +671,12 @@ pub async fn send_whatsapp_otp(
     }
 
     let formatted_num = if phone.contains("@") { phone.clone() } else { format!("{}@s.whatsapp.net", phone) };
-    let port = env::var("WHATSAPP_PORT").unwrap_or_else(|_| "5001".to_string());
+    let port = env::var("WHATSAPP_PORT").unwrap_or_else(|_| "5002".to_string());
     let url = format!("http://127.0.0.1:{}/send", port);
-    let client = reqwest::Client::new();
+    let client = reqwest::Client::builder()
+        .timeout(std::time::Duration::from_secs(10))
+        .build()
+        .unwrap_or_else(|_| reqwest::Client::new());
     let msg = format!("🔑 *TradingSafe Verification Code*\n\nKode verifikasi Anda adalah: *{}*\n\nJangan bagikan kode ini kepada siapapun.", otp_code);
     
     let req_payload = serde_json::json!({

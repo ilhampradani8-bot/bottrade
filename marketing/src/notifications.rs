@@ -125,11 +125,13 @@ pub mod buffer {
                 channel_ids.push(id);
             }
         }
+        /*
         if let Ok(id) = env::var("BUFFER_THREADS_CHANNEL_ID") {
             if !id.trim().is_empty() {
                 channel_ids.push(id);
             }
         }
+        */
 
         if channel_ids.is_empty() {
             println!("💡 [Buffer] Skipping broadcast: No Buffer channels (BUFFER_X_CHANNEL_ID / BUFFER_THREADS_CHANNEL_ID) configured.");

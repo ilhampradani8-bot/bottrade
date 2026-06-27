@@ -42,6 +42,7 @@ const getGuestId = (): string => {
 export default function ChatSupport() {
   const [isOpen, setIsOpen] = useState(false);
   const [unreadCount, setUnreadCount] = useState(0);
+  const [isVisible, setIsVisible] = useState(true);
   const [messages, setMessages] = useState<Message[]>([
     {
       id: 0,
@@ -51,6 +52,22 @@ export default function ChatSupport() {
       status: 'read'
     }
   ]);
+
+  // Sync window event for bubble visibility from other components
+  useEffect(() => {
+    const saved = localStorage.getItem('show_chat_bubble');
+    if (saved === 'false') {
+      setIsVisible(false);
+    } else {
+      setIsVisible(true);
+    }
+
+    const handleToggle = (e: any) => {
+      setIsVisible(e.detail !== false);
+    };
+    window.addEventListener('chat-bubble-visibility', handleToggle);
+    return () => window.removeEventListener('chat-bubble-visibility', handleToggle);
+  }, []);
   
   const [input, setInput] = useState('');
   const [user, setUser] = useState<any>(null);
@@ -312,6 +329,8 @@ export default function ChatSupport() {
   const handleQuickReply = (text: string) => {
     setInput(text);
   };
+
+  if (!isVisible) return null;
 
   return (
     <>

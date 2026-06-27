@@ -196,10 +196,10 @@ async fn process_scheduled_broadcast(groq_key: &str, model: &str, state: &mut Ma
         }
     };
 
-    // Jika jadwal berikutnya lebih dari 1 jam dari sekarang, sesuaikan menjadi maksimal 1 jam dari sekarang (agar postingan lebih cepat/banyak)
-    if next_time > now + chrono::Duration::hours(1) {
-        println!("⚙️ [Marketing Engine] Next scheduled post was set to {}. Adjusting to 1 hour from now per user request.", next_time);
-        next_time = now + chrono::Duration::hours(1);
+    // Jika jadwal berikutnya lebih dari 8 jam dari sekarang, sesuaikan menjadi maksimal 8 jam dari sekarang (sehari 3x posting)
+    if next_time > now + chrono::Duration::hours(8) {
+        println!("⚙️ [Marketing Engine] Next scheduled post was set to {}. Adjusting to 8 hours from now per user request.", next_time);
+        next_time = now + chrono::Duration::hours(8);
         state.next_scheduled_broadcast_time = next_time.to_rfc3339();
         save_state(state);
     }
@@ -233,13 +233,13 @@ async fn process_scheduled_broadcast(groq_key: &str, model: &str, state: &mut Ma
             state.recent_topics.remove(0);
         }
 
-        // Posting berikutnya tepat 1 jam dari sekarang sesuai instruksi user
-        let next_scheduled = now + chrono::Duration::hours(1);
+        // Posting berikutnya tepat 8 jam dari sekarang sesuai instruksi user (3x sehari)
+        let next_scheduled = now + chrono::Duration::hours(8);
         state.next_scheduled_broadcast_time = next_scheduled.to_rfc3339();
         state.last_daily_broadcast_date = now.format("%Y-%m-%d").to_string();
         save_state(state);
 
-        println!("📅 [Marketing Engine] Next dynamic post scheduled at: {} (Setiap 1 jam)", state.next_scheduled_broadcast_time);
+        println!("📅 [Marketing Engine] Next dynamic post scheduled at: {} (Setiap 8 jam)", state.next_scheduled_broadcast_time);
     }
 }
 

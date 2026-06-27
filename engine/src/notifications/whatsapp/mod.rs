@@ -12,11 +12,13 @@ pub async fn send(message: &str) -> Result<(), Box<dyn Error>> {
         }
     };
 
-    let port = env::var("WHATSAPP_PORT").unwrap_or_else(|_| "5001".to_string());
+    let port = env::var("WHATSAPP_PORT").unwrap_or_else(|_| "5002".to_string());
     let url = format!("http://127.0.0.1:{}/send", port);
 
     // 2. Setup client dan body request
-    let client = reqwest::Client::new();
+    let client = reqwest::Client::builder()
+        .timeout(std::time::Duration::from_secs(10))
+        .build()?;
     let payload = json!({
         "message": message
     });
@@ -44,10 +46,12 @@ pub fn generate_qr_login() {
 }
 
 pub async fn send_to_group(message: &str, group_id: &str) -> Result<(), Box<dyn Error>> {
-    let port = env::var("WHATSAPP_PORT").unwrap_or_else(|_| "5001".to_string());
+    let port = env::var("WHATSAPP_PORT").unwrap_or_else(|_| "5002".to_string());
     let url = format!("http://127.0.0.1:{}/send", port);
 
-    let client = reqwest::Client::new();
+    let client = reqwest::Client::builder()
+        .timeout(std::time::Duration::from_secs(10))
+        .build()?;
     let payload = json!({
         "message": message,
         "group_id": group_id
@@ -70,10 +74,12 @@ pub async fn send_to_group(message: &str, group_id: &str) -> Result<(), Box<dyn 
 }
 
 pub async fn send_to_group_with_reply(message: &str, group_id: &str, quoted_msg_id: Option<&str>) -> Result<String, Box<dyn Error>> {
-    let port = env::var("WHATSAPP_PORT").unwrap_or_else(|_| "5001".to_string());
+    let port = env::var("WHATSAPP_PORT").unwrap_or_else(|_| "5002".to_string());
     let url = format!("http://127.0.0.1:{}/send", port);
 
-    let client = reqwest::Client::new();
+    let client = reqwest::Client::builder()
+        .timeout(std::time::Duration::from_secs(10))
+        .build()?;
     let mut payload = json!({
         "message": message,
         "group_id": group_id

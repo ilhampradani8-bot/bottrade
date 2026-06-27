@@ -20,6 +20,25 @@ export default function ProfileDropdown({
   setActiveView, 
   setShowProfileDropdown 
 }: ProfileDropdownProps) {
+  const [chatSupportVisible, setChatSupportVisible] = React.useState(true);
+
+  React.useEffect(() => {
+    const saved = localStorage.getItem('show_chat_bubble');
+    if (saved === 'false') {
+      setChatSupportVisible(false);
+    } else {
+      setChatSupportVisible(true);
+    }
+  }, []);
+
+  const handleToggleChatSupport = () => {
+    const newValue = !chatSupportVisible;
+    setChatSupportVisible(newValue);
+    localStorage.setItem('show_chat_bubble', String(newValue));
+    const event = new CustomEvent('chat-bubble-visibility', { detail: newValue });
+    window.dispatchEvent(event);
+  };
+
   return (
     <>
       {/* Backdrop for closing when click-outside - aligned below navbar */}
@@ -138,7 +157,31 @@ export default function ProfileDropdown({
         </div>
 
         {/* Footer Actions */}
-        <div className="space-y-4">
+        <div className="space-y-3">
+          {/* Chat Support Toggle */}
+          <div className={`w-full flex items-center justify-between px-3 py-2.5 rounded-[6px] transition-all text-[10px] font-black uppercase tracking-wider ${
+            theme === 'light' 
+              ? 'bg-black/5 text-slate-700' 
+              : 'bg-white/5 text-slate-300'
+          }`}>
+            <span className="flex items-center gap-3">
+              <MessageSquare size={14} className="text-indigo-400" />
+              <span>Gelembung Chat (Live Support)</span>
+            </span>
+            <button 
+              onClick={handleToggleChatSupport}
+              className={`w-10 h-5 rounded-full p-0.5 transition-colors duration-300 focus:outline-none cursor-pointer ${
+                chatSupportVisible ? 'bg-indigo-600' : 'bg-slate-800'
+              }`}
+            >
+              <div 
+                className={`w-4 h-4 rounded-full bg-white shadow-md transform transition-transform duration-350 ${
+                  chatSupportVisible ? 'translate-x-5' : 'translate-x-0'
+                }`}
+              />
+            </button>
+          </div>
+
           {/* Theme Mode Toggle Button */}
           <button 
             onClick={toggleTheme} 

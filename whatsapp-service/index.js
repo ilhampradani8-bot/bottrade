@@ -21,6 +21,18 @@ const GROUP_ID = process.env.WHATSAPP_GROUP_ID; // e.g. "1203632389239823@g.us"
 let sock = null;
 
 async function connectToWhatsApp() {
+    if (sock) {
+        try {
+            console.log('🧹 Cleaning up old WhatsApp socket listeners...');
+            sock.ev.removeAllListeners('connection.update');
+            sock.ev.removeAllListeners('creds.update');
+            sock.ev.removeAllListeners('messages.upsert');
+            sock.ev.removeAllListeners('group-participants.update');
+        } catch (e) {
+            console.log('⚠️ Failed to clean up old listeners:', e.message);
+        }
+    }
+
     // MultiFileAuthState persists the login session so you scan QR only ONCE
     const { state, saveCreds } = await useMultiFileAuthState(path.resolve(__dirname, 'auth_info'));
 
@@ -55,9 +67,28 @@ async function connectToWhatsApp() {
         }
 
         if (connection === 'close') {
-            const shouldReconnect = lastDisconnect?.error?.output?.statusCode !== DisconnectReason.loggedOut;
+            const statusCode = lastDisconnect?.error?.output?.statusCode;
+            const errStr = lastDisconnect?.error?.stack || lastDisconnect?.error?.toString() || '';
+            const shouldReconnect = statusCode !== DisconnectReason.loggedOut;
+            
             console.log('⚠️ WhatsApp connection closed. Reconnecting in 5 seconds...', lastDisconnect?.error);
-            if (shouldReconnect) {
+            
+            const isCorrupted = errStr.includes('Bad MAC') || errStr.toLowerCase().includes('bad mac') || statusCode === 401;
+            
+            if (isCorrupted) {
+                console.log('🚨 WhatsApp session is corrupted (Bad MAC or 401 Unauthorized). Clearing auth_info directory to reset the session...');
+                const fs = require('fs');
+                const authDir = path.resolve(__dirname, 'auth_info');
+                if (fs.existsSync(authDir)) {
+                    try {
+                        fs.rmSync(authDir, { recursive: true, force: true });
+                        console.log('🗑️ Successfully cleared auth_info folder.');
+                    } catch (rmErr) {
+                        console.error('❌ Failed to clear auth_info folder:', rmErr);
+                    }
+                }
+                setTimeout(connectToWhatsApp, 5000);
+            } else if (shouldReconnect) {
                 setTimeout(connectToWhatsApp, 5000);
             }
         } else if (connection === 'open') {
@@ -133,6 +164,29 @@ async function connectToWhatsApp() {
     });
 }
 
+// Helper function to send messages with retry
+async function sendMessageWithRetry(targetGroupId, payload, options, maxRetries = 3) {
+    let lastErr = null;
+    for (let attempt = 1; attempt <= maxRetries; attempt++) {
+        try {
+            if (!sock) {
+                throw new Error('WhatsApp socket is not initialized yet');
+            }
+            const sentMsg = await sock.sendMessage(targetGroupId, payload, options);
+            return sentMsg;
+        } catch (err) {
+            lastErr = err;
+            const errStr = err.message || err.toString();
+            console.warn(`⚠️ WhatsApp send attempt ${attempt}/${maxRetries} to ${targetGroupId} failed. Error: ${errStr}`);
+            if (attempt < maxRetries) {
+                console.log(`🔄 Retrying in 2 seconds...`);
+                await new Promise(resolve => setTimeout(resolve, 2000));
+            }
+        }
+    }
+    throw lastErr;
+}
+
 // REST API for Rust Analysis Engine to trigger broadcast
 app.post('/send', async (req, res) => {
     const { message, group_id, quoted_msg_id } = req.body;
@@ -165,11 +219,11 @@ app.post('/send', async (req, res) => {
     }
 
     try {
-        const sentMsg = await sock.sendMessage(targetGroupId, { text: message }, options);
+        const sentMsg = await sendMessageWithRetry(targetGroupId, { text: message }, options);
         console.log(`📤 Message successfully broadcast to WhatsApp group ${targetGroupId}`);
         return res.json({ success: true, message_id: sentMsg.key.id });
     } catch (err) {
-        console.error(`❌ Failed to send message to WhatsApp group ${targetGroupId}:`, err);
+        console.error(`❌ All retry attempts failed to send message to WhatsApp group ${targetGroupId}:`, err);
         return res.status(500).json({ error: err.toString() });
     }
 });

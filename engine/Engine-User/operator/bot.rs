@@ -88,10 +88,13 @@ impl StrategyBot {
             println!("🤖 [Bot-{}] Initialized. Tracking pair {} at starting price ${:.2}", self.id, self.pair, price);
         }
 
-        match self.bot_type.to_lowercase().as_str() {
-            "dca" => self.execute_dca_logic(price).await?,
-            "grid" => self.execute_grid_logic(price).await?,
-            _ => self.execute_indicator_logic(price).await?,
+        let bot_type_lower = self.bot_type.to_lowercase();
+        if bot_type_lower.contains("dca") {
+            self.execute_dca_logic(price).await?;
+        } else if bot_type_lower.contains("grid") {
+            self.execute_grid_logic(price).await?;
+        } else {
+            self.execute_indicator_logic(price).await?;
         }
 
         Ok(())
@@ -101,23 +104,34 @@ impl StrategyBot {
     async fn execute_dca_logic(&mut self, price: f64) -> Result<(), Box<dyn std::error::Error>> {
         let entry_price = self.last_action_price.unwrap();
         
+        let parse_f64_val = |val: &Value| -> Option<f64> {
+            val.as_f64()
+                .or_else(|| {
+                    val.as_str().and_then(|s| s.replace(",", "").parse::<f64>().ok())
+                })
+        };
+
         // Safety deviation or safety order nominal trigger
-        // check "safety_deviation" (0.025 = 2.5%) or "safety_order_nominal" or default 2.5%
-        let deviation_pct = self.settings.get("safety_deviation")
-            .and_then(|v| v.as_f64())
+        // check "price_deviation" or "safety_deviation" (e.g. "2.0" -> 0.02)
+        let deviation_pct = self.settings.get("price_deviation")
+            .or_else(|| self.settings.get("safety_deviation"))
+            .and_then(parse_f64_val)
+            .map(|d| if d >= 1.0 { d / 100.0 } else { d })
             .unwrap_or(0.025);
 
-        // Take profit percentage (e.g. 1.5% is 0.015 or check "take_profit_percentage" as whole number e.g. 1.0)
+        // Take profit percentage (e.g. 1.5% is 0.015)
         let take_profit_pct = self.settings.get("take_profit_percentage")
-            .and_then(|v| v.as_f64().map(|pct| pct / 100.0))
-            .or_else(|| self.settings.get("take_profit").and_then(|v| v.as_f64()))
-            .unwrap_or(0.015); // Default 1.5%
+            .or_else(|| self.settings.get("take_profit"))
+            .and_then(parse_f64_val)
+            .map(|tp| if tp >= 1.0 { tp / 100.0 } else { tp })
+            .unwrap_or(0.015);
 
-        // Stop loss percentage (e.g. "stop_loss_percentage" as whole number e.g. 1.0)
+        // Stop loss percentage
         let stop_loss_pct = self.settings.get("stop_loss_percentage")
-            .and_then(|v| v.as_f64().map(|pct| pct / 100.0))
-            .or_else(|| self.settings.get("stop_loss").and_then(|v| v.as_f64()))
-            .unwrap_or(0.0); // 0.0 means disabled
+            .or_else(|| self.settings.get("stop_loss"))
+            .and_then(parse_f64_val)
+            .map(|sl| if sl >= 1.0 { sl / 100.0 } else { sl })
+            .unwrap_or(0.0);
 
         // 1. STOP LOSS TRIGGER
         if stop_loss_pct > 0.0 && self.position_size > 0.0 && (price <= entry_price * (1.0 - stop_loss_pct)) {
@@ -161,7 +175,20 @@ impl StrategyBot {
     /// GRID trading logic simulation
     async fn execute_grid_logic(&mut self, price: f64) -> Result<(), Box<dyn std::error::Error>> {
         let entry_price = self.last_action_price.unwrap();
-        let grid_range = 0.01; // 1% spacing
+        
+        let parse_f64_val = |val: &Value| -> Option<f64> {
+            val.as_f64()
+                .or_else(|| {
+                    val.as_str().and_then(|s| s.replace(",", "").parse::<f64>().ok())
+                })
+        };
+
+        let grid_range = self.settings.get("grid_spacing")
+            .or_else(|| self.settings.get("grid_percentage"))
+            .or_else(|| self.settings.get("price_deviation"))
+            .and_then(parse_f64_val)
+            .map(|g| if g >= 1.0 { g / 100.0 } else { g })
+            .unwrap_or(0.01); // 1% spacing default
 
         if price <= entry_price * (1.0 - grid_range) {
             // Buy grid level

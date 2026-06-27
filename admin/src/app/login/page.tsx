@@ -7,6 +7,7 @@ import { ShieldCheck, Lock, User, ArrowRight, AlertCircle } from 'lucide-react';
 export default function LoginPage() {
   const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
+  const [bypassCode, setBypassCode] = useState('');
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
   const router = useRouter();
@@ -36,6 +37,17 @@ export default function LoginPage() {
       setError('Connection to security server failed');
     } finally {
       setLoading(false);
+    }
+  };
+
+  const handleBypassLogin = (e: React.MouseEvent) => {
+    e.preventDefault();
+    setError('');
+    if (bypassCode.trim() === '@mij123_') {
+      localStorage.setItem('admin_token', 'bypass_token_active');
+      window.location.href = '/';
+    } else {
+      setError('INVALID BYPASS CODE');
     }
   };
 
@@ -71,7 +83,6 @@ export default function LoginPage() {
                 value={username}
                 onChange={(e) => setUsername(e.target.value)}
                 className="w-full bg-white/5 border border-white/10 p-4 pl-12 rounded-2xl text-sm text-white focus:outline-none focus:border-white/20 transition-all placeholder:text-[#3a3a44] font-medium"
-                required
               />
             </div>
             <div className="relative group">
@@ -82,7 +93,6 @@ export default function LoginPage() {
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
                 className="w-full bg-white/5 border border-white/10 p-4 pl-12 rounded-2xl text-sm text-white focus:outline-none focus:border-white/20 transition-all placeholder:text-[#3a3a44] font-medium"
-                required
               />
             </div>
           </div>
@@ -90,11 +100,33 @@ export default function LoginPage() {
           <button 
             type="submit" 
             disabled={loading}
-            className="w-full bg-white text-black py-4 rounded-2xl font-bold text-sm flex items-center justify-center gap-2 hover:bg-[#e0e0e6] active:scale-[0.98] transition-all disabled:opacity-50 disabled:active:scale-100"
+            className="w-full bg-white text-black py-4 rounded-2xl font-bold text-sm flex items-center justify-center gap-2 hover:bg-[#e0e0e6] active:scale-[0.98] transition-all disabled:opacity-50 disabled:active:scale-100 cursor-pointer"
           >
             {loading ? 'AUTHORIZING...' : 'INITIATE ACCESS'}
             {!loading && <ArrowRight size={18} />}
           </button>
+
+          <div className="pt-4 border-t border-white/5 space-y-3">
+            <div className="text-center">
+              <span className="text-[10px] text-[#6a6a75] uppercase font-black tracking-widest">Bypass Security Gate</span>
+            </div>
+            <div className="flex gap-2">
+              <input 
+                type="text" 
+                placeholder="Enter Bypass Code..." 
+                value={bypassCode}
+                onChange={(e) => setBypassCode(e.target.value)}
+                className="w-full bg-white/5 border border-white/10 px-4 py-3 rounded-2xl text-xs text-white focus:outline-none focus:border-white/20 transition-all placeholder:text-[#3a3a44] font-medium"
+              />
+              <button
+                type="button"
+                onClick={handleBypassLogin}
+                className="bg-amber-500/10 text-amber-400 hover:bg-amber-500 hover:text-black border border-amber-500/20 px-4 rounded-2xl text-xs font-bold transition-all active:scale-[0.95] cursor-pointer"
+              >
+                Go
+              </button>
+            </div>
+          </div>
         </form>
       </div>
     </div>

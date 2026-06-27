@@ -146,7 +146,7 @@ struct BacktestRequest {
 }
 
 pub async fn start() {
-    dotenv().ok();
+    dotenvy::from_path("/root/bottrade/.env").ok();
     let database_url = env::var("DATABASE_URL").expect("DATABASE_URL must be set");
 
     let pool = PgPoolOptions::new()
@@ -241,6 +241,8 @@ pub async fn start() {
         .route("/api/admin/simulations", get(crate::server::admin::get_all_simulations))
         .route("/api/admin/overview", get(crate::server::admin::get_admin_overview))
         .route("/api/admin/reports", get(crate::server::admin::get_admin_reports))
+        .route("/api/admin/trades", get(crate::server::admin::get_admin_trades))
+        .route("/api/admin/simulations/trades", get(crate::server::admin::get_admin_sim_trades))
         .route("/api/admin/market-summary", get(crate::server::admin::get_market_summary))
         .route("/api/admin/api-keys", get(crate::server::admin::get_all_api_keys))
         .route("/api/admin/api-keys/:id/status", post(crate::server::admin::update_api_key_status))

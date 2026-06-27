@@ -11,14 +11,14 @@ import CariBot from "@/components/features/CariBot";
 import StrategySettings from "@/components/features/StrategySettings";
 import JurnalRiwayat from "@/components/features/JurnalRiwayat";
 import ChatSupport from "@/components/features/ChatSupport";
-import ChatSupportPage from "@/components/features/ChatSupportPage";
+import Bots from "@/components/features/Bots";
 import PengaturanAkun from "@/components/features/PengaturanAkun";
 import ForumStatic from "@/components/features/ForumStatic";
 import Afiliasi from "@/components/features/Afiliasi";
 import Berlangganan from "@/components/features/Berlangganan";
 import StatusAkun from "@/components/features/StatusAkun";
 import NotifikasiPage from "@/components/features/NotifikasiPage";
-import { LayoutDashboard, Search, Key, Menu, MessageSquare, Settings } from 'lucide-react';
+import { LayoutDashboard, Search, Key, Menu, MessageSquare, Settings, Cpu } from 'lucide-react';
 import { useLanguage } from '@/lang/LanguageContext';
 import { usePathname, useRouter } from 'next/navigation';
 
@@ -79,7 +79,7 @@ export default function AdminLayout({
       case 'cari-bot': return <CariBot setActiveView={setActiveView} />;
       case 'strategi-pengaturan': return <StrategySettings />;
       case 'jurnal': return <JurnalRiwayat />;
-      case 'chat': return <ChatSupportPage />;
+      case 'bots': return <Bots setActiveView={setActiveView} />;
       case 'pengaturan-akun': return <PengaturanAkun />;
       case 'forum': return <ForumStatic />;
       case 'afiliasi': return <Afiliasi />;
@@ -109,11 +109,11 @@ export default function AdminLayout({
           activeView={activeView}
           setActiveView={setActiveView}
         />
-        <main className={`flex-1 overflow-y-auto overflow-x-hidden transition-all duration-300 p-0 flex flex-col justify-between min-h-[calc(100vh-56px)] pt-14 ${isSidebarOpen ? 'lg:pl-56' : 'lg:pl-0'} ${activeView === 'jurnal' || activeView === 'chat' ? 'pb-0' : 'pb-24 lg:pb-8'}`}>
+        <main className={`flex-1 overflow-y-auto overflow-x-hidden transition-all duration-300 p-0 flex flex-col justify-between min-h-[calc(100vh-56px)] pt-14 ${isSidebarOpen ? 'lg:pl-56' : 'lg:pl-0'} ${activeView === 'jurnal' || activeView === 'bots' ? 'pb-0' : 'pb-24 lg:pb-8'}`}>
           <div className="max-w-none w-full animate-in fade-in slide-in-from-bottom-2 duration-500 flex-1">
             {renderContent()}
           </div>
-          {activeView !== 'jurnal' && activeView !== 'chat' && <Footer setActiveView={setActiveView} />}
+          {activeView !== 'jurnal' && activeView !== 'bots' && <Footer setActiveView={setActiveView} />}
         </main>
       </div>
 
@@ -134,11 +134,11 @@ export default function AdminLayout({
           <span className="text-[8px] font-bold tracking-tight">Bot</span>
         </button>
         <button 
-          onClick={() => setActiveView('chat')}
-          className={`flex flex-col items-center gap-0.5 transition-all duration-300 ${activeView === 'chat' ? 'text-[#0071e3] scale-105' : 'text-[#86868b]'}`}
+          onClick={() => setActiveView('bots')}
+          className={`flex flex-col items-center gap-0.5 transition-all duration-300 ${activeView === 'bots' ? 'text-[#0071e3] scale-105' : 'text-[#86868b]'}`}
         >
-          <MessageSquare size={18} strokeWidth={2.5} />
-          <span className="text-[8px] font-bold tracking-tight">Concierge</span>
+          <Cpu size={18} strokeWidth={2.5} />
+          <span className="text-[8px] font-bold tracking-tight">Bots</span>
         </button>
         <button 
           onClick={() => setIsSidebarOpen(true)}

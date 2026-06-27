@@ -75,7 +75,7 @@ const getFlagSvg = (code: string) => {
 
 export default function Navbar({ toggleSidebar, isSidebarOpen, setActiveView, activeView }: any) {
   const router = useRouter();
-  const { lang, changeLanguage } = useLanguage();
+  const { lang, changeLanguage, t } = useLanguage();
   const [authModal, setAuthModal] = useState({ isOpen: false, mode: 'login' });
   const [user, setUser] = useState<any>(null);
   const [showProfileDropdown, setShowProfileDropdown] = useState(false);
@@ -165,13 +165,13 @@ export default function Navbar({ toggleSidebar, isSidebarOpen, setActiveView, ac
 
   const getViewTitle = (view: string) => {
     switch (view) {
-      case 'overview': return 'Overview';
+      case 'overview': return `${t('overview.performance_growth')} - ${t('overview.realtime_tracking')}`;
       case 'api-key': return 'API Settings';
       case 'tester': return 'Simulation Lab';
       case 'cari-bot': return 'Cari Asisten';
       case 'strategi-pengaturan': return 'Bot Configurations';
       case 'jurnal': return 'Audit & Analitik Trading Sheet';
-      case 'chat': return chatSessionName;
+      case 'bots': return 'Daftar Bots';
       case 'pengaturan-akun': return 'Pengaturan Akun';
       case 'forum': return 'Forum Komunitas';
       case 'afiliasi': return 'Program Afiliasi';

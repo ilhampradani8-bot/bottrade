@@ -357,6 +357,74 @@ pub async fn get_admin_reports(
     }))
 }
 
+#[derive(Serialize, TS, sqlx::FromRow)]
+#[ts(export, export_to = "../../admin/src/types/AdminTrade.ts")]
+pub struct AdminTrade {
+    pub id: i32,
+    pub user_id: Option<i32>,
+    pub pair: String,
+    pub strategy_type: String,
+    pub side: String,
+    #[ts(type = "string")]
+    pub price: rust_decimal::Decimal,
+    #[ts(type = "string")]
+    pub amount: rust_decimal::Decimal,
+    #[ts(type = "string | null")]
+    pub pnl: Option<rust_decimal::Decimal>,
+    #[ts(type = "string")]
+    pub created_at: chrono::DateTime<chrono::Utc>,
+    pub status: String,
+    pub error_code: Option<String>,
+    pub error_message: Option<String>,
+}
+
+#[derive(Serialize, TS, sqlx::FromRow)]
+#[ts(export, export_to = "../../admin/src/types/AdminSimTrade.ts")]
+pub struct AdminSimTrade {
+    pub id: i32,
+    pub user_id: Option<i32>,
+    pub pair: String,
+    pub strategy_type: String,
+    pub side: String,
+    #[ts(type = "string")]
+    pub price: rust_decimal::Decimal,
+    #[ts(type = "string")]
+    pub amount: rust_decimal::Decimal,
+    #[ts(type = "string | null")]
+    pub pnl: Option<rust_decimal::Decimal>,
+    #[ts(type = "string")]
+    pub created_at: chrono::NaiveDateTime,
+    pub currency: Option<String>,
+}
+
+pub async fn get_admin_trades(
+    State(state): State<AppState>,
+) -> (StatusCode, Json<Vec<AdminTrade>>) {
+    let trades = sqlx::query_as!(
+        AdminTrade,
+        "SELECT id, user_id, pair, strategy_type, side, price, amount, pnl, created_at as \"created_at!\", status as \"status!\", error_code, error_message FROM trades_by_jurnalriwayat ORDER BY created_at DESC LIMIT 1000"
+    )
+    .fetch_all(&state.pool)
+    .await
+    .unwrap_or_default();
+
+    (StatusCode::OK, Json(trades))
+}
+
+pub async fn get_admin_sim_trades(
+    State(state): State<AppState>,
+) -> (StatusCode, Json<Vec<AdminSimTrade>>) {
+    let trades = sqlx::query_as!(
+        AdminSimTrade,
+        "SELECT id, user_id, pair, strategy_type, side, price, amount, pnl, created_at as \"created_at!\", currency FROM simulation_trades_by_jurnal ORDER BY created_at DESC LIMIT 1000"
+    )
+    .fetch_all(&state.pool)
+    .await
+    .unwrap_or_default();
+
+    (StatusCode::OK, Json(trades))
+}
+
 pub async fn update_user_status(
     State(state): State<AppState>,
     Path(user_id): Path<i32>,
@@ -668,7 +736,7 @@ pub async fn get_notification_settings(
         telegram_chat_id_down: env::var("TELEGRAM_CHAT_ID_DOWN").unwrap_or_else(|_| "-5215838199".to_string()),
         whatsapp_group_id_up: env::var("WHATSAPP_GROUP_ID").unwrap_or_else(|_| "120363427987942506@g.us".to_string()),
         whatsapp_group_id_down: env::var("WHATSAPP_GROUP_ID_DOWN").unwrap_or_else(|_| "120363409651722299@g.us".to_string()),
-        whatsapp_port: env::var("WHATSAPP_PORT").unwrap_or_else(|_| "5001".to_string()),
+        whatsapp_port: env::var("WHATSAPP_PORT").unwrap_or_else(|_| "5002".to_string()),
         cooldown_minutes: "15".to_string(),
         alert_on_errors: "true".to_string(),
         emergency_template_down: Some("🚨 *SISTEM DOWN*: Kami mendeteksi gangguan pada server. Tim kami sedang menangani pemulihan.".to_string()),
@@ -763,7 +831,7 @@ pub async fn broadcast_message(
     let mut tg_chat_down = env::var("TELEGRAM_CHAT_ID_DOWN").unwrap_or_else(|_| "-5215838199".to_string());
     let mut wa_group_up = env::var("WHATSAPP_GROUP_ID").unwrap_or_else(|_| "120363427987942506@g.us".to_string());
     let mut wa_group_down = env::var("WHATSAPP_GROUP_ID_DOWN").unwrap_or_else(|_| "120363409651722299@g.us".to_string());
-    let mut wa_port = env::var("WHATSAPP_PORT").unwrap_or_else(|_| "5001".to_string());
+    let mut wa_port = env::var("WHATSAPP_PORT").unwrap_or_else(|_| "5002".to_string());
 
     for row in rows {
         match row.key.as_str() {
@@ -785,7 +853,10 @@ pub async fn broadcast_message(
         email: String,
     }
 
-    let client = reqwest::Client::new();
+    let client = reqwest::Client::builder()
+        .timeout(std::time::Duration::from_secs(10))
+        .build()
+        .unwrap_or_else(|_| reqwest::Client::new());
     let mut tg_sent = 0;
     let mut wa_sent = 0;
     let mut email_sent = 0;
@@ -1140,7 +1211,7 @@ pub async fn emergency_broadcast(
     let mut tg_chat_down = env::var("TELEGRAM_CHAT_ID_DOWN").unwrap_or_else(|_| "-5215838199".to_string());
     let mut wa_group_up = env::var("WHATSAPP_GROUP_ID").unwrap_or_else(|_| "120363427987942506@g.us".to_string());
     let mut wa_group_down = env::var("WHATSAPP_GROUP_ID_DOWN").unwrap_or_else(|_| "120363409651722299@g.us".to_string());
-    let mut wa_port = env::var("WHATSAPP_PORT").unwrap_or_else(|_| "5001".to_string());
+    let mut wa_port = env::var("WHATSAPP_PORT").unwrap_or_else(|_| "5002".to_string());
 
     for row in rows {
         match row.key.as_str() {
@@ -1154,7 +1225,10 @@ pub async fn emergency_broadcast(
         }
     }
 
-    let client = reqwest::Client::new();
+    let client = reqwest::Client::builder()
+        .timeout(std::time::Duration::from_secs(10))
+        .build()
+        .unwrap_or_else(|_| reqwest::Client::new());
     let mut tg_sent = 0;
     let mut wa_sent = 0;
     let mut errors = Vec::new();
@@ -1326,7 +1400,10 @@ pub async fn get_telegram_bot_updates(
         }
     };
 
-    let client = reqwest::Client::new();
+    let client = reqwest::Client::builder()
+        .timeout(std::time::Duration::from_secs(10))
+        .build()
+        .unwrap_or_else(|_| reqwest::Client::new());
     let url = format!("https://api.telegram.org/bot{}/getUpdates?timeout=5", bot_token);
 
     let response = match client.get(&url).send().await {
@@ -1417,7 +1494,7 @@ pub async fn send_special_notification(
         .unwrap_or_default();
 
     let mut tg_token = env::var("TELEGRAM_BOT_TOKEN").unwrap_or_default();
-    let mut wa_port = env::var("WHATSAPP_PORT").unwrap_or_else(|_| "5001".to_string());
+    let mut wa_port = env::var("WHATSAPP_PORT").unwrap_or_else(|_| "5002".to_string());
 
     for row in rows {
         match row.key.as_str() {
@@ -1427,7 +1504,10 @@ pub async fn send_special_notification(
         }
     }
 
-    let client = reqwest::Client::new();
+    let client = reqwest::Client::builder()
+        .timeout(std::time::Duration::from_secs(10))
+        .build()
+        .unwrap_or_else(|_| reqwest::Client::new());
     let mut tg_sent = false;
     let mut wa_sent = false;
     let mut email_sent = false;

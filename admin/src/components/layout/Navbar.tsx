@@ -115,7 +115,7 @@ export default function Navbar() {
     switch (path) {
       case '/':
         return [
-          { key: 'datalab', label: 'Data Lab', active: true }
+          { key: 'dashboard', label: lang === 'en' ? 'Dashboard' : 'Dasbor', active: true }
         ];
       case '/users':
         return [
@@ -123,7 +123,7 @@ export default function Navbar() {
         ];
       case '/bots':
         return [
-          { key: 'bots', label: 'Bots Management', active: true }
+          { key: 'bots', label: lang === 'en' ? 'Bots Management' : 'Manajemen Bot', active: true }
         ];
       case '/apikeys':
         return [
@@ -136,6 +136,14 @@ export default function Navbar() {
       case '/notifications':
         return [
           { key: 'notifications', label: lang === 'en' ? 'Alerts & Broadcast Center' : 'Pusat Alert & Broadcast', active: true }
+        ];
+      case '/reports':
+        return [
+          { key: 'reports', label: lang === 'en' ? 'Ledger Reports' : 'Laporan & Audit', active: true }
+        ];
+      case '/reports/chat':
+        return [
+          { key: 'chat', label: lang === 'en' ? 'Support Center Chat' : 'Pusat Obrolan Bantuan', active: true }
         ];
       default:
         return [

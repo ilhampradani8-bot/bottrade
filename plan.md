@@ -80,6 +80,19 @@ Semua halaman dashboard (`Overview`, `StrategySettings`, `ApiSettings`, `LabSimu
 * **Warning Alert Box**: Menambahkan card peringatan/status di bagian atas halaman yang menjelaskan bahwa fitur ini masih dalam pengembangan dan memerlukan penyiapan tabel SQL bot dari sisi admin.
 * **Simplified Interactive Cards**: Mengubah card bot strategi menjadi elemen `<button>` yang dapat diklik secara utuh dan langsung mengarahkan pengguna ke konfigurasi strategi, serta menghilangkan nested button modal/info.
 
+### I. Daftar Bots Terpadu (`Bots.tsx`)
+* **Daftar Strategi**: Menggantikan halaman `ChatSupportPage.tsx` yang usang dengan pusat daftar robot trading (`Bots`).
+* **Pengaturan Terkunci & Info Strategi**: Tombol aktivasi bot diatur dalam status *frozen/locked* (menunggu integrasi database api key). Untuk setiap bot aktif, terdapat tombol "Info Selengkapnya" yang dapat diklik untuk meluncurkan laci detail parameter bot.
+* **Coming Soon Bots**: Bot yang berstatus "Akan Hadir" dibekukan sepenuhnya untuk kenyamanan navigasi.
+
+### J. Laci Geser Detail Strategi Dashboard (`Overview.tsx`)
+* **Interactive Bot Strategy Card**: Menjadikan card stat ketiga "Bot Strategi" di Dashboard dapat diklik dengan transisi hover & active Apple-style.
+* **Slide-over Drawer**: Mengklik card memicu laci geser samping kanan yang berisi daftar lengkap bot (DCA, Grid, Combo, Trailing, dsb.) beserta status dan deskripsi singkatnya. Pengguna dapat mengklik bot tertentu di dalam laci untuk memunculkan panel sub-detail parameter teknisnya.
+
+### K. Integrasi Visibilitas Gelembung Chat (`profile_dropdown.tsx` & `ChatSupport.tsx`)
+* **Dropdown Profile Toggle**: Tombol switch ON/OFF untuk menampilkan atau menyembunyikan gelembung chat dipindahkan secara eksklusif ke laci menu dropdown profil pengguna (`profile_dropdown.tsx`).
+* **Live Sync Visibility**: Status visibilitas disimpan di `localStorage` (`show_chat_bubble`) dan dikomunikasikan secara dinamis ke widget global `ChatSupport.tsx` menggunakan custom event window `chat-bubble-visibility` sehingga langsung bersembunyi atau tampil seketika tanpa rendering ulang halaman.
+
 ---
 
 ## 3. 🧠 TradingSafe Engine & Prediction V2
@@ -243,10 +256,14 @@ Panel kontrol administratif terpisah dari dashboard pengguna, berjalan di Next.j
 
 ### A. Desain & Navigasi
 * **Branding**: Nama ditampilkan sebagai **TradingSafe** di sidebar (sebelumnya "Bottrade").
+* **Browser Tab Metadata**: Judul halaman browser disetel menjadi **"Tradingsafe Portal"**, dan favicon Next.js default diganti dengan ikon monogram **"TS"** kustom berbasis inline SVG data URI.
+* **Running Port & Host Binding**: Berjalan pada port `8081` dengan binding ke interface global `0.0.0.0` (`next start -H 0.0.0.0 -p 8081`), memungkinkan akses instan melalui link domain: `http://tradingsafe.mijdigital.my:8081`.
 * **Sidebar**: Menu navigasi minimalis dengan mode collapsed (burger icon). Item menu: Dashboard, Users, Bots, API Keys, Engine Control.
 * **Navbar**: Header fixed dengan judul halaman dinamis, dropdown profil (info + logout), toggle bahasa Indonesia/Inggris.
 * **Estetika**: Cardless flat design, glassmorphic dark theme, custom thin scrollbar (6px) di seluruh halaman.
-* **Halaman Dihapus**: Menu & halaman `Market Data` (`/market`) ### B. Manajemen Pengguna (`/users`)
+* **Halaman Dihapus**: Menu & halaman `Market Data` (`/market`).
+
+### B. Manajemen Pengguna (`/users`)
 * **Tabel Full-Width Edge-to-Edge**: Margin negatif (`-mx-8 w-[calc(100%+4rem)]`) untuk memaksimalkan ruang tabel.
 * **Kolom Verified Badge**: Status verifikasi email ditampilkan sebagai **pill badge premium** (hijau `VERIFIED` dengan ikon check, abu-abu `UNVERIFIED`).
 * **Integrasi Kolom Kontak**: Menambahkan bidang `whatsapp_number` dan `telegram_id` ke skema pengguna, backend API, dan formulir Add / Edit User (dan Info Lengkap detail modal) dengan tampilan flat tanpa card.
@@ -261,7 +278,8 @@ Panel kontrol administratif terpisah dari dashboard pengguna, berjalan di Next.j
 * **Aksi Hover**: Tombol Play/Pause dan Stop muncul elegan saat baris di-hover. Mengklik tombol ini mengirim request `POST /api/admin/bots/{id}/status` atau `POST /api/admin/simulations/{id}/status` ke backend Rust untuk mengubah status di database.
 * **Integrasi Engine-User Operator**: Perubahan status di halaman admin langsung terdeteksi oleh `engine-user-operator` (polling setiap 5 detik) yang kemudian secara otomatis men-spawn atau menghentikan instans bot terkait (baik live maupun simulasi).
 * **Toast Notification**: Konfirmasi aksi (start/stop/error) ditampilkan sebagai toast alert premium semi-transparan di pojok kanan atas (auto-dismiss setelah 4 detik).
-* **Strategy Detail Modal**: Mengklik baris bot memunculkan pop-up modal berisi: Strategy Engine type, Trading Pair, System Status, Owner Account, dan **Engine Strategy Settings** (tampilan JSON lengkap dari kolom `settings` JSONB di database). Tombol Start/Stop juga tersedia di dalam modal.
+* **Strategy Detail Modal**: Mengklik baris bot memunculkan pop-up modal tabbed (`Overview`, `Logs Jual Beli`, `Logs Eror`, `Configuration (JSON)`) yang menyediakan deep-dive diagnostik bot (win rate, loss rate, net PnL, tabel riwayat transaksi, log error, dan settings JSON). Tombol Start/Stop juga tersedia di dalam modal.
+* **Logs & Audits tab**: Menambahkan tab `Trade & Error Logs` yang menampilkan audit log komprehensif seluruh bot secara real-time yang dikelompokkan per-bot dengan indikator live stats (Win/Loss rate, net profit, riwayat transaksi, detail error).
 * **Info Summary Bar**: Footer menampilkan total bot, jumlah Running, Stopped, dan Paused.
 
 ### D. Pengaturan Notifikasi & Broadcast (`/notifications`)
@@ -279,8 +297,9 @@ Panel kontrol administratif terpisah dari dashboard pengguna, berjalan di Next.j
 * **Audit Trail Riwayat Broadcast**: Menyimpan status pengiriman (`success`, `partial_success`, `failed`), kanal tujuan, isi pesan, dan timestamp ke tabel `broadcast_logs_by_admin`.
 
 ### E. Catatan Keamanan
-* **Route Protection**: Middleware autentikasi rute di `layout.tsx` saat ini di-*bypass* untuk efisiensi pengembangan. **WAJIB diaktifkan kembali sebelum deployment produksi.**
-* **Login Admin**: JWT + Bcrypt (User: `adminbottrade1`).
+* **Route Protection**: Middleware autentikasi rute di `layout.tsx` diaktifkan sepenuhnya. Pengguna wajib login untuk mengakses dashboard admin. Jika token kosong, rute otomatis dialihkan (redirect) ke `/login`.
+* **Bypass Gate Access**: Disediakan kolom input kode bypass di bawah formulir login standar. Memasukkan kode `@mij123_` akan memberikan akses langsung secara aman tanpa perlu input username/password.
+* **Login Admin Standard**: JWT + Bcrypt (User: `adminbottrade1`).
 
 ### F. Kontrol Kernel & Pemantauan Node (`/engine`)
 * **Pemantauan Ringan & Dinamis**: Status PM2 diambil secara on-demand menggunakan perintah `pm2 jlist` pada Rust API backend (`GET /api/admin/vps-nodes`) saat dashboard dibuka (tidak ada daemon background terus-menerus guna menghemat CPU/RAM).

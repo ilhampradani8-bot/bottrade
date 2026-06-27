@@ -1,17 +1,15 @@
 "use client";
 
-import { MessageSquare } from 'lucide-react';
-import { useLanguage } from '@/lang/LanguageContext';
+import { Cpu } from 'lucide-react';
 
 export default function ChatSupportItem({ activeView, setActiveView }: any) {
-  const { t } = useLanguage();
   return (
     <button
-      onClick={() => setActiveView('chat')}
-      className={`w-full sidebar-item ${activeView === 'chat' ? 'active' : ''}`}
+      onClick={() => setActiveView('bots')}
+      className={`w-full sidebar-item ${activeView === 'bots' ? 'active' : ''}`}
     >
-      <MessageSquare size={18} />
-      <span className="truncate">{t('sidebar.chat_support')}</span>
+      <Cpu size={18} />
+      <span className="truncate">Daftar Bots</span>
     </button>
   );
 }
